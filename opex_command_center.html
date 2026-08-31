@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPEX Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161A;
+    --panel:#1A2027;
+    --panel-2:#212933;
+    --panel-3:#262F3A;
+    --line:#2C3542;
+    --amber:#C9963F;
+    --amber-soft:#3A2E1B;
+    --green:#5FAE84;
+    --green-soft:rgba(95,174,132,.15);
+    --blue:#7FA7D9;
+    --blue-soft:rgba(127,167,217,.15);
+    --red:#C96B5A;
+    --text:#EAEDEF;
+    --muted:#8B96A3;
+    --muted-2:#5C6774;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+  body{padding:0 0 100px;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px;}
+
+  /* ===== NAV ===== */
+  .top-nav{
+    position:sticky; top:0; z-index:40; background:rgba(18,22,26,0.94); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); padding:14px 0;
+  }
+  .top-nav .wrap{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; flex-shrink:0;}
+  .brand .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber);}
+  .nav-tabs{display:flex; gap:4px; flex-wrap:wrap; background:var(--panel); border:1px solid var(--line); border-radius:30px; padding:4px;}
+  .nav-tab{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; color:var(--muted);
+    background:transparent; border:none; border-radius:24px; padding:8px 16px; cursor:pointer; white-space:nowrap;
+  }
+  .nav-tab.active{background:var(--amber); color:#1A1408;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  /* ===== HERO ===== */
+  .hero{
+    border-bottom:1px solid var(--line);
+    background: radial-gradient(1200px 300px at 10% -10%, rgba(201,150,63,0.10), transparent), var(--bg);
+    padding:36px 0 28px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--amber); display:flex; align-items:center; gap:10px; margin-bottom:14px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 8px var(--amber);}
+  .hero-top{display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:24px;}
+  h1{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:27px; margin:0; letter-spacing:-0.01em;}
+  .sub{color:var(--muted); font-size:14px; margin-top:6px; max-width:560px; line-height:1.5;}
+
+  .stat-row{display:flex; gap:12px; margin-top:24px; flex-wrap:wrap;}
+  .stat-card{flex:1; min-width:140px; background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:14px 16px;}
+  .stat-card .n{font-family:'JetBrains Mono',monospace; font-size:19px; font-weight:700;}
+  .stat-card .l{font-size:11.5px; color:var(--muted); margin-top:4px;}
+  .stat-card.ic .n{color:var(--green);}
+  .stat-card.pc .n{color:var(--blue);}
+
+  .cat-stat-row{display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;}
+  .cat-stat-card{
+    flex:1; min-width:150px; background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px;
+  }
+  .cat-stat-card .n{font-family:'JetBrains Mono',monospace; font-size:17px; font-weight:700; color:var(--amber);}
+  .cat-stat-card .l{font-size:10.5px; color:var(--muted); margin-top:3px; text-transform:uppercase; letter-spacing:.03em;}
+
+  /* ===== FORMS / PANELS ===== */
+  .grid{display:grid; grid-template-columns: 380px 1fr; gap:24px; margin-top:32px;}
+  @media (max-width: 940px){ .grid{grid-template-columns:1fr;} }
+
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin-bottom:24px;}
+  .panel h2{font-family:'Space Grotesk',sans-serif; font-size:15px; margin:0 0 4px; display:flex; align-items:center; gap:8px;}
+  .panel h2 .idx{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--amber); background:var(--amber-soft); border-radius:4px; padding:2px 6px;}
+  .panel .desc{color:var(--muted); font-size:12.5px; margin-bottom:18px;}
+
+  label{display:block; font-size:12px; color:var(--muted); margin-bottom:6px; margin-top:16px; font-weight:500;}
+  label:first-of-type{margin-top:0;}
+  label .req{color:var(--red); margin-left:2px;}
+  label .opt{color:var(--muted-2); font-weight:400; margin-left:5px;}
+  input, select, textarea{
+    width:100%; background:var(--panel-2); border:1px solid var(--line); border-radius:7px;
+    color:var(--text); padding:9px 11px; font-family:'Inter',sans-serif; font-size:13.5px;
+    outline:none; transition:border-color .15s;
+  }
+  input:focus, select:focus, textarea:focus{border-color:var(--amber);}
+  input:disabled{opacity:.65;}
+  textarea{resize:vertical; min-height:64px; line-height:1.4;}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .save-input-wrap{position:relative;}
+  .save-input-wrap input{padding-left:38px; font-family:'JetBrains Mono',monospace;}
+  .save-prefix{position:absolute; left:11px; top:50%; transform:translateY(-50%); color:var(--muted-2); font-family:'JetBrains Mono',monospace; font-size:13px; pointer-events:none;}
+
+  .btn{
+    width:100%; margin-top:20px; background:var(--amber); color:#1A1408; border:none;
+    border-radius:7px; padding:11px; font-weight:700; font-size:13.5px; cursor:pointer;
+    font-family:'Inter',sans-serif; transition:filter .15s, transform .1s;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:active{transform:scale(.99);}
+  .btn.secondary{background:transparent; border:1px solid var(--line); color:var(--muted); margin-top:8px;}
+  .btn.secondary:hover{border-color:var(--muted-2); color:var(--text);}
+  .btn.small{width:auto; margin-top:0; padding:9px 16px; font-size:13px;}
+  .btn.green{background:var(--green); color:#0D1B14;}
+  .btn.ghost-danger{background:transparent; border:1px solid #5A3530; color:var(--red);}
+  .btn.ghost-danger:hover{background:rgba(201,107,90,.1);}
+  .btn.ghost{background:transparent; border:1px solid var(--line); color:var(--muted);}
+  .btn.ghost:hover{border-color:var(--muted-2); color:var(--text);}
+  .field-err{font-size:11.5px; color:var(--red); margin-top:5px; display:none;}
+
+  .section-divider{
+    margin:26px 0 16px; padding-top:16px; border-top:1px dashed var(--line);
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted-2);
+  }
+  .section-divider:first-of-type{margin-top:20px;}
+
+  /* ===== IC / PC LIST ===== */
+  .tabs-row{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+  .chip{
+    font-family:'JetBrains Mono',monospace; font-size:11px; padding:5px 10px; border-radius:20px;
+    border:1px solid var(--line); color:var(--muted); cursor:pointer; background:transparent; white-space:nowrap;
+  }
+  .chip.active{background:var(--amber-soft); border-color:var(--amber); color:var(--amber);}
+
+  .ic-list, .entry-list{display:flex; flex-direction:column; gap:12px; max-height:720px; overflow-y:auto; padding-right:4px;}
+  .ic-list::-webkit-scrollbar, .entry-list::-webkit-scrollbar{width:6px;}
+  .ic-list::-webkit-scrollbar-thumb, .entry-list::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
+
+  .ic-card{background:var(--panel-2); border:1px solid var(--line); border-radius:9px; padding:16px 18px;}
+  .ic-top{display:flex; justify-content:space-between; gap:14px; margin-bottom:8px; flex-wrap:wrap;}
+  .ic-title-group{display:flex; align-items:center; gap:9px; flex-wrap:wrap;}
+  .ic-cardno{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; color:var(--text);}
+  .badge{font-size:10.5px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; padding:3px 9px; border-radius:20px;}
+  .badge.pending{background:var(--amber-soft); color:var(--amber);}
+  .badge.ongoing{background:var(--green-soft); color:var(--green);}
+  .badge.rejected{background:rgba(201,107,90,.15); color:var(--red);}
+  .badge.locked{background:var(--panel-3); color:var(--muted);}
+  .ic-meta{font-size:11.5px; color:var(--muted-2); display:flex; gap:12px; flex-wrap:wrap;}
+  .ic-body{font-size:13px; color:var(--text); line-height:1.5; margin:8px 0;}
+  .ic-body .label{font-weight:700; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; display:block; margin-bottom:3px;}
+  .ic-body + .ic-body{margin-top:10px;}
+  .ic-tags{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:2px;}
+  .tag{font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:600; color:var(--muted); background:var(--panel-3); border:1px solid var(--line); border-radius:5px; padding:3px 8px;}
+  .tag.ic{background:var(--green-soft); color:var(--green); border:none;}
+  .tag.pc{background:var(--blue-soft); color:var(--blue); border:none;}
+  .tag.cat{background:var(--amber-soft); color:var(--amber); border:none;}
+
+  .decision-row, .ongoing-row, .card-footer{
+    display:flex; gap:10px; align-items:center; margin-top:14px; padding-top:14px;
+    border-top:1px solid var(--line); flex-wrap:wrap;
+  }
+  .ongoing-row{color:var(--green); font-size:12.5px;}
+  .ongoing-row .pulse{width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 0 0 rgba(95,174,132,.5); animation:pulse 1.8s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(95,174,132,.45);} 70%{box-shadow:0 0 0 7px rgba(95,174,132,0);} 100%{box-shadow:0 0 0 0 rgba(95,174,132,0);}}
+  .target-date{font-weight:700; color:var(--text);}
+  .target-inline{display:flex; align-items:center; gap:8px; flex:1; min-width:220px;}
+  .target-inline input{padding:9px 12px; font-size:13px;}
+
+  /* ===== LEDGER ENTRIES ===== */
+  .ledger-head{display:flex; flex-direction:column; gap:10px; margin-bottom:14px;}
+  .ledger-head-row{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;}
+  .search{position:relative; flex:1; min-width:180px;}
+  .search input{padding-left:32px;}
+  .search svg{position:absolute; left:10px; top:50%; transform:translateY(-50%); opacity:.5;}
+
+  .filter-bar{display:flex; gap:8px; flex-wrap:wrap; align-items:center;}
+  .dropdown-wrap{position:relative;}
+  .dd-btn{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; padding:7px 12px; border-radius:8px;
+    border:1px solid var(--line); background:var(--panel-2); color:var(--text); cursor:pointer; display:flex; align-items:center; gap:6px;
+  }
+  .dd-btn:hover{border-color:var(--muted-2);}
+  .dd-btn.filtered{border-color:var(--amber); color:var(--amber);}
+  .dd-panel{
+    display:none; position:absolute; top:calc(100% + 6px); left:0; z-index:30;
+    background:var(--panel-3); border:1px solid var(--line); border-radius:8px; padding:6px;
+    min-width:150px; max-height:260px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.4);
+  }
+  .dd-panel.open{display:block;}
+  .dd-item{font-size:12.5px; padding:7px 10px; border-radius:6px; cursor:pointer; color:var(--text);}
+  .dd-item:hover{background:var(--panel-2);}
+  .dd-item.active{color:var(--amber); font-weight:700;}
+
+  .entry{background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:14px 16px; display:grid; grid-template-columns: 44px 1fr auto; gap:14px; align-items:start;}
+  .entry .sl{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted-2); background:var(--bg); border-radius:6px; text-align:center; padding:6px 0; height:fit-content;}
+  .entry .body .top{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:5px;}
+  .entry .card-no{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted);}
+  .entry .details{font-size:13px; line-height:1.45; color:var(--text); margin:2px 0 6px;}
+  .entry .meta{font-size:11px; color:var(--muted-2); display:flex; gap:12px; flex-wrap:wrap;}
+  .entry .amount{font-family:'JetBrains Mono',monospace; font-weight:700; font-size:16px; color:var(--amber); text-align:right; white-space:nowrap;}
+  .entry .del{background:none; border:none; color:var(--muted-2); cursor:pointer; font-size:16px; margin-top:6px;}
+  .entry .del:hover{color:var(--red);}
+  .entry-actions{display:flex; flex-direction:column; align-items:flex-end; gap:8px;}
+
+  .empty{text-align:center; padding:50px 20px; color:var(--muted-2);}
+  .empty svg{opacity:.35; margin-bottom:10px;}
+  .empty p{font-size:13px; margin:0;}
+
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--panel-2); border:1px solid var(--amber); color:var(--text);
+    padding:11px 20px; border-radius:8px; font-size:13px; opacity:0; pointer-events:none;
+    transition:all .25s; font-family:'JetBrains Mono',monospace; z-index:50;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  ::-webkit-scrollbar{width:8px;}
+</style>
+</head>
+<body>
+
+<div class="top-nav">
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span>OPEX Command Center</div>
+    <div class="nav-tabs" id="navTabs"></div>
+  </div>
+</div>
+
+<!-- ============ VIEW: IMPROVEMENT CARDS ============ -->
+<div class="view active" id="view-ic">
+  <div class="hero">
+    <div class="wrap">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>IMPROVEMENT CARD LOG</div>
+          <h1>Improvement Cards</h1>
+          <div class="sub">Card numbers are assigned automatically in order (ICO-01, ICO-02, …). Accept a card to make it selectable in the Savings Form.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+      <div class="panel">
+        <h2><span class="idx">NEW</span> Log an entry</h2>
+        <div class="desc">Fields marked <span class="req" style="color:var(--red);">*</span> are required.</div>
+
+        <label>SBU / Company <span class="req">*</span></label>
+        <select id="ic-sbu">
+          <option value="" selected disabled>Select…</option>
+          <option>AAFL</option>
+          <option>ACCL</option>
+          <option>AIL</option>
+          <option>ALEL</option>
+          <option>AEL</option>
+          <option>APFIL</option>
+          <option>FAL</option>
+          <option>HRML</option>
+          <option>Other</option>
+        </select>
+
+        <div class="row2">
+          <div>
+            <label>Card No <span class="opt">auto-assigned</span></label>
+            <input id="ic-cardno" disabled />
+          </div>
+          <div>
+            <label>Department <span class="req">*</span></label>
+            <select id="ic-dept" onchange="refreshIcCardNoPreview()">
+              <option value="" selected disabled>Select…</option>
+              <option>OPEX</option>
+              <option>Maintenance</option>
+              <option>Production</option>
+              <option>Civil</option>
+              <option>Sustainability</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Idea Provider Name <span class="req">*</span></label>
+            <input id="ic-provider" placeholder="Full name" />
+          </div>
+          <div>
+            <label>Created Date <span class="req">*</span></label>
+            <input id="ic-created" type="date" />
+          </div>
+        </div>
+
+        <label>Details of the Development <span class="req">*</span></label>
+        <textarea id="ic-details" placeholder="Describe the improvement idea…"></textarea>
+
+        <label>Benefit of Development <span class="opt">optional</span></label>
+        <textarea id="ic-benefit" placeholder="Expected time/cost/safety benefit…"></textarea>
+
+        <div class="field-err" id="ic-errBanner">Please fill in all required fields before logging this card.</div>
+
+        <button class="btn" onclick="logCard()">Log improvement card</button>
+      </div>
+
+      <div class="panel">
+        <h2><span class="idx">LOG</span> Logged cards</h2>
+        <div class="desc">Accept a card to mark it ongoing with a target date — it then becomes selectable in the Savings Form.</div>
+
+        <div class="tabs-row">
+          <button class="chip active" data-f="all" onclick="setIcTab('all')">All</button>
+          <button class="chip" data-f="pending" onclick="setIcTab('pending')">Awaiting decision</button>
+          <button class="chip" data-f="ongoing" onclick="setIcTab('ongoing')">Ongoing</button>
+          <button class="chip" data-f="rejected" onclick="setIcTab('rejected')">Rejected</button>
+          <button class="chip" data-f="hidden" onclick="setIcTab('hidden')">Hidden</button>
+        </div>
+
+        <!-- ADDED: SBU + date filters -->
+        <div class="filter-bar" style="margin-top:10px;">
+          <div class="dropdown-wrap">
+            <button class="dd-btn" id="ic-sbuBtn" onclick="toggleIcDropdown('sbu')">SBU: All ▾</button>
+            <div class="dd-panel" id="ic-sbuPanel"></div>
+          </div>
+          <div class="dropdown-wrap">
+            <button class="dd-btn" id="ic-monthBtn" onclick="toggleIcDropdown('month')">Month: All ▾</button>
+            <div class="dd-panel" id="ic-monthPanel"></div>
+          </div>
+          <div class="dropdown-wrap">
+            <button class="dd-btn" id="ic-yearBtn" onclick="toggleIcDropdown('year')">Year: All ▾</button>
+            <div class="dd-panel" id="ic-yearPanel"></div>
+          </div>
+        </div>
+
+        <div class="ic-list" id="icList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: PROBLEM SOLVING CARDS ============ -->
+<div class="view" id="view-pc">
+  <div class="hero">
+    <div class="wrap">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>PROBLEM SOLVING CARD LOG</div>
+          <h1>Problem Solving Cards</h1>
+          <div class="sub">Card numbers are assigned automatically in order (PSC-01, PSC-02, …). Accept a card to make it selectable in the Savings Form.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+      <div class="panel">
+        <h2><span class="idx">NEW</span> Log an entry</h2>
+        <div class="desc">Fields marked <span class="req" style="color:var(--red);">*</span> are required.</div>
+
+        <label>SBU / Company <span class="req">*</span></label>
+        <select id="ps-sbu">
+          <option value="" selected disabled>Select…</option>
+          <option>AAFL</option>
+          <option>ACCL</option>
+          <option>AIL</option>
+          <option>ALEL</option>
+          <option>AEL</option>
+          <option>APFIL</option>
+          <option>FAL</option>
+          <option>HRML</option>
+          <option>Other</option>
+        </select>
+
+        <div class="row2">
+          <div>
+            <label>Card No <span class="opt">auto-assigned</span></label>
+            <input id="ps-cardno" disabled />
+          </div>
+          <div>
+            <label>Department <span class="req">*</span></label>
+            <select id="ps-dept" onchange="refreshPcCardNoPreview()">
+              <option value="" selected disabled>Select…</option>
+              <option>OPEX</option>
+              <option>Maintenance</option>
+              <option>Production</option>
+              <option>Civil</option>
+              <option>Sustainability</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label>Idea Provider Name <span class="req">*</span></label>
+            <input id="ps-provider" placeholder="Full name" />
+          </div>
+          <div>
+            <label>Created Date <span class="req">*</span></label>
+            <input id="ps-created" type="date" />
+          </div>
+        </div>
+
+        <label>Problem Description <span class="req">*</span></label>
+        <textarea id="ps-details" placeholder="Describe the problem…"></textarea>
+
+        <label>Root Cause <span class="opt">optional</span></label>
+        <textarea id="ps-rootcause" placeholder="What caused this problem…"></textarea>
+
+        <label>Corrective / Remedial Action <span class="opt">optional</span></label>
+        <textarea id="ps-corrective" placeholder="What was/will be done to fix it…"></textarea>
+
+        <div class="field-err" id="ps-errBanner">Please fill in all required fields before logging this card.</div>
+
+        <button class="btn" onclick="logPcCard()">Log problem solving card</button>
+      </div>
+
+      <div class="panel">
+        <h2><span class="idx">LOG</span> Logged cards</h2>
+        <div class="desc">Accept a card to mark it ongoing with a target date — it then becomes selectable in the Savings Form.</div>
+
+        <div class="tabs-row">
+          <button class="chip active" data-f="all" onclick="setPcTab('all')">All</button>
+          <button class="chip" data-f="pending" onclick="setPcTab('pending')">Awaiting decision</button>
+          <button class="chip" data-f="ongoing" onclick="setPcTab('ongoing')">Ongoing</button>
+          <button class="chip" data-f="rejected" onclick="setPcTab('rejected')">Rejected</button>
+          <button class="chip" data-f="hidden" onclick="setPcTab('hidden')">Hidden</button>
+        </div>
+
+        <!-- ADDED: SBU + date filters -->
+        <div class="filter-bar" style="margin-top:10px;">
+          <div class="dropdown-wrap">
+            <button class="dd-btn" id="pc-sbuBtn" onclick="togglePcDropdown('sbu')">SBU: All ▾</button>
+            <div class="dd-panel" id="pc-sbuPanel"></div>
+          </div>
+          <div class="dropdown-wrap">
+            <button class="dd-btn" id="pc-monthBtn" onclick="togglePcDropdown('month')">Month: All ▾</button>
+            <div class="dd-panel" id="pc-monthPanel"></div>
+          </div>
+          <div class="dropdown-wrap">
+            <button class="dd-btn" id="pc-yearBtn" onclick="togglePcDropdown('year')">Year: All ▾</button>
+            <div class="dd-panel" id="pc-yearPanel"></div>
+          </div>
+        </div>
+
+        <div class="ic-list" id="pcList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ VIEW: SAVINGS FORM (merged) ============ -->
+<div class="view" id="view-savings">
+  <div class="hero">
+    <div class="wrap">
+      <div class="hero-top">
+        <div>
+          <div class="eyebrow"><span class="dot"></span>OPEX INITIATIVE TRACKER</div>
+          <h1>Savings Form</h1>
+          <div class="sub">Pick an ongoing card and its details fill in automatically. Fill in whichever saving amounts apply below — empty ones are skipped when you log the entry.</div>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card"><div class="n" id="sv-statCount">0</div><div class="l">Entries logged</div></div>
+        <div class="stat-card ic"><div class="n" id="sv-statIC">0</div><div class="l">Improvement Cards (IC)</div></div>
+        <div class="stat-card pc"><div class="n" id="sv-statPC">0</div><div class="l">Problem Solving Cards (PC)</div></div>
+        <div class="stat-card"><div class="n" id="sv-statSection">—</div><div class="l">Top department</div></div>
+      </div>
+
+      <div class="cat-stat-row" id="sv-catStats"></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="grid">
+
+      <div class="panel">
+        <h2><span class="idx">NEW</span> Log an entry</h2>
+        <div class="desc">Choose Source and Card No first — Department, Benefit, Created and Ongoing dates auto-fill.</div>
+
+        <label>Source</label>
+        <select id="sv-source" onchange="onSourceChange('sv')">
+          <option value="IC">IC — Improvement Card</option>
+          <option value="PC">PC — Problem Solving Card</option>
+        </select>
+
+        <label>Card No <span class="req">*</span></label>
+        <select id="sv-cardno-select" onchange="onCardNoSelect('sv')"></select>
+
+        <label>Department</label>
+        <input id="sv-section" disabled placeholder="Select a card above" />
+
+        <label>Benefit of Development</label>
+        <textarea id="sv-benefit" placeholder="Expected time/cost/safety benefit…"></textarea>
+
+        <label>Created date</label>
+        <input id="sv-created" type="date" />
+
+        <label>Ongoing (accepted) date</label>
+        <input id="sv-ongoing" type="date" />
+
+        <label>Complete date <span class="opt">enter manually once finished</span></label>
+        <input id="sv-complete" type="date" />
+
+        <div id="sv-catFields"></div>
+
+        <div class="field-err" id="sv-err">Card No. and at least one saving amount are required.</div>
+
+        <button class="btn" onclick="addEntry()">Add to ledger</button>
+        <button class="btn secondary" onclick="clearLedgerForm()">Clear form</button>
+      </div>
+
+      <div class="panel">
+        <h2><span class="idx">LOG</span> All entries</h2>
+        <div class="desc">Search, filter by source or category, or by month/year — remove an entry with the ✕.</div>
+
+        <div class="ledger-head">
+          <div class="ledger-head-row">
+            <div class="search">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B96A3" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <input id="sv-searchBox" placeholder="Search card no. or details…" oninput="render()" />
+            </div>
+            <div class="filter-bar" id="sv-sourceChipRow">
+              <button class="chip active" data-f="all" onclick="setSourceFilter('all')">All sources</button>
+              <button class="chip" data-f="IC" onclick="setSourceFilter('IC')">IC</button>
+              <button class="chip" data-f="PC" onclick="setSourceFilter('PC')">PC</button>
+            </div>
+          </div>
+
+          <div class="filter-bar" id="sv-categoryChipRow"></div>
+
+          <div class="filter-bar">
+            <div class="dropdown-wrap">
+              <button class="dd-btn" id="sv-sbuBtn" onclick="toggleDropdown('sbu')">SBU: All ▾</button>
+              <div class="dd-panel" id="sv-sbuPanel"></div>
+            </div>
+            <div class="dropdown-wrap">
+              <button class="dd-btn" id="sv-monthBtn" onclick="toggleDropdown('month')">Month: All ▾</button>
+              <div class="dd-panel" id="sv-monthPanel"></div>
+            </div>
+            <div class="dropdown-wrap">
+              <button class="dd-btn" id="sv-yearBtn" onclick="toggleDropdown('year')">Year: All ▾</button>
+              <div class="dd-panel" id="sv-yearPanel"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="entry-list" id="sv-entryList"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CATEGORY CONFIG — the 5 saving types merged into one form
+   ============================================================ */
+const CATEGORIES = [
+  { key:'cost',          chipLabel:'Cost Savings',                      amountLabel:'Monthly saving amount',            unitMode:'text',   unitDefault:'BDT', prefix:'৳' },
+  { key:'productivity',  chipLabel:'Productivity Improvement Savings',  amountLabel:'Monthly Productivity Amount',      unitMode:'text',   unitDefault:'MT',  prefix:'' },
+  { key:'waste',         chipLabel:'Waste Savings',                     amountLabel:'Monthly Waste Savings Amount',     unitMode:'select', unitOptions:['Pcs','MT'], prefix:'' },
+  { key:'environment',   chipLabel:'Environment Impact Savings',        amountLabel:'Monthly Environment Impact',       unitMode:'select', unitOptions:['Water (Ltr)','Electricity (kW)'], prefix:'' }
+];
+
+/* ============================================================
+   SUPABASE CONFIG — Cost Savings / Productivity / Environment /
+   Wastage(QTY) / Time(Min) each live in their own table.
+   ============================================================ */
+const API_BASE = 'http://127.0.0.1:5006/api';
+
+const TABLE_MAP = {
+  cost: 'accl_cost_savings',
+  productivity: 'accl_productivity_improvement',
+  waste: 'accl_wastage_savings_qty',
+  environment: 'accl_environment_impact'
+};
+
+async function sbFetch(path, options = {}){
+  // `path` is a Supabase-style string like "accl_improvement_cards?select=*&order=id.desc"
+  // or a PATCH/DELETE filter "accl_improvement_cards?id=eq.12".
+  let url = `${API_BASE}/${path}`;
+  let method = options.method || 'GET';
+  let body = options.body;
+
+  // Supabase PATCH/DELETE put the filter in the query string and the payload in the body.
+  // Our POST body is the full row; PATCH body is the partial update — both are sent as JSON.
+  const res = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body
+  });
+  if(!res.ok){
+    const text = await res.text().catch(()=> '');
+    throw new Error(`API ${path} failed: ${res.status} ${text}`);
+  }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : null;
+}
+
+function monthKeyFromDate(dateStr){
+  const d = dateStr ? new Date(dateStr) : new Date();
+  if(isNaN(d.getTime())) return new Date().toISOString().slice(0,7);
+  return d.toISOString().slice(0,7); // "YYYY-MM"
+}
+
+/* ============================================================
+   SHARED STATE
+   ============================================================ */
+let icCards = [];
+let currentIcTab = 'all';
+const IC_KEY = 'improvement-cards-v2';
+
+let pcCards = [];
+let currentPcTab = 'all';
+const PC_KEY = 'problem-solving-cards-v2';
+
+const LEDGER_KEY = 'opex-savings-entries-unified';
+const ledgerState = { entries: [], nextSL: 1, sourceFilter: 'all', categoryFilter: 'all', month: 'all', year: 'all', sbu: 'all' };
+// ADDED: SBU + date (month/year) filter state for IC and PC card lists
+let icSbuFilter = 'all', icMonthFilter = 'all', icYearFilter = 'all';
+let pcSbuFilter = 'all', pcMonthFilter = 'all', pcYearFilter = 'all';
+// ADDED: shared helpers for the new filters
+function cardMonthIndex(c){ const d = c && c.created ? String(c.created) : ''; return d.length>=7 ? parseInt(d.slice(5,7))-1 : null; }
+function cardYear(c){ const d = c && c.created ? String(c.created) : ''; return d.length>=4 ? parseInt(d.slice(0,4)) : null; }
+function entrySbu(e){ const pool = e.source==='IC' ? icCards : pcCards; const c = pool.find(x=>x.cardno===e.cardno); return c ? c.sbu : ''; }
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML;
+}
+function fmtMoney(n){
+  return new Intl.NumberFormat('en-US',{minimumFractionDigits:2, maximumFractionDigits:2}).format(n);
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+function buildNav(){
+  document.getElementById('navTabs').innerHTML = `
+    <button class="nav-tab active" data-view="ic" onclick="switchView('ic')">Improvement Cards</button>
+    <button class="nav-tab" data-view="pc" onclick="switchView('pc')">Problem Solving Cards</button>
+    <button class="nav-tab" data-view="savings" onclick="switchView('savings')">Savings Form</button>
+  `;
+}
+function switchView(v){
+  document.querySelectorAll('.nav-tab').forEach(el=>el.classList.toggle('active', el.dataset.view===v));
+  document.getElementById('view-ic').classList.toggle('active', v==='ic');
+  document.getElementById('view-pc').classList.toggle('active', v==='pc');
+  document.getElementById('view-savings').classList.toggle('active', v==='savings');
+  if(v === 'savings'){ onSourceChange('sv'); render(); }
+}
+
+/* ============================================================
+   AUTO CARD NUMBERING
+   ============================================================ */
+function nextCardNo(pool, prefix){
+  let max = 0;
+  // No trailing $ anchor — card numbers now look like "ICO-05 — VRM", so we
+  // only need to match the "PREFIX-NN" lead-in to find the next sequence number.
+  const re = new RegExp('^'+prefix+'-(\\d+)','i');
+  pool.forEach(c => { const m = re.exec(c.cardno); if(m) max = Math.max(max, parseInt(m[1],10)); });
+  return prefix + '-' + String(max+1).padStart(2,'0');
+}
+function refreshIcCardNoPreview(){
+  const dept = document.getElementById('ic-dept').value;
+  const field = document.getElementById('ic-cardno');
+  field.value = dept ? nextCardNo(icCards, 'ICO') + ' — ' + dept : 'Select a department first';
+}
+function refreshPcCardNoPreview(){
+  const dept = document.getElementById('ps-dept').value;
+  const field = document.getElementById('ps-cardno');
+  field.value = dept ? nextCardNo(pcCards, 'PSC') + ' — ' + dept : 'Select a department first';
+}
+
+/* ============================================================
+   IMPROVEMENT CARDS
+   ============================================================ */
+const IC_TABLE = 'accl_improvement_cards';
+
+function icRowToCard(row){
+  const raw = row.status || 'Pending';
+  let status;
+  if(raw === 'Pending') status = 'pending';        // only truly-new, undecided cards
+  else if(raw === 'Ongoing') status = 'ongoing';
+  else if(raw === 'Rejected') status = 'rejected';
+  else status = 'locked';                          // Completed / Initiated / any other historical status — read-only
+  return {
+    id: row.id, sbu: row.sbu, cardno: row.card_no, dept: row.dept,
+    provider: row.provider, created: row.created_date, details: row.details,
+    benefit: row.benefit,
+    status, rawStatus: raw,
+    targetDate: row.target_date, acceptedDate: row.accepted_date, hidden: !!row.hidden
+  };
+}
+
+async function loadIcCards(){
+  try{
+    const rows = await sbFetch(`${IC_TABLE}?select=*&order=id.desc`);
+    icCards = (rows||[]).map(icRowToCard);
+  }catch(e){ console.error('loadIcCards failed', e); icCards = []; }
+  refreshIcCardNoPreview();
+  renderIc();
+}
+
+async function logCard(){
+  const sbu = document.getElementById('ic-sbu').value;
+  const dept = document.getElementById('ic-dept').value;
+  const provider = document.getElementById('ic-provider').value.trim();
+  const created = document.getElementById('ic-created').value;
+  const details = document.getElementById('ic-details').value.trim();
+  const benefit = document.getElementById('ic-benefit').value.trim();
+  const err = document.getElementById('ic-errBanner');
+
+  if(!sbu || !dept || !provider || !created || !details){
+    err.style.display='block'; return;
+  }
+  err.style.display='none';
+
+  const cardno = nextCardNo(icCards, 'ICO') + ' — ' + dept;
+  try{
+    await sbFetch(IC_TABLE, { method: 'POST', body: JSON.stringify({
+      sbu, card_no: cardno, dept, provider, created_date: created,
+      details, benefit, status: 'Pending'
+    })});
+  }catch(e){
+    console.error('logCard failed', e);
+    showToast('Failed to save — check connection');
+    return;
+  }
+  await loadIcCards();
+  clearIcForm();
+  showToast(`Card ${cardno} logged — awaiting decision`);
+  refreshIcCardNoPreview();
+  renderIc();
+}
+
+function clearIcForm(){
+  document.getElementById('ic-sbu').value='';
+  document.getElementById('ic-dept').value='';
+  document.getElementById('ic-provider').value='';
+  document.getElementById('ic-created').value='';
+  document.getElementById('ic-details').value='';
+  document.getElementById('ic-benefit').value='';
+}
+
+function setIcTab(t){
+  currentIcTab = t;
+  document.querySelectorAll('#view-ic .chip').forEach(el=>el.classList.toggle('active', el.dataset.f===t));
+  renderIc();
+}
+
+// ADDED: IC SBU + date filter dropdowns
+function toggleIcDropdown(which){
+  const panel = document.getElementById('ic-'+which+'Panel');
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open'));
+  if(!isOpen) panel.classList.add('open');
+}
+function buildIcFilterPanels(){
+  const sbus = [...new Set(icCards.map(c=>c.sbu).filter(Boolean))].sort();
+  document.getElementById('ic-sbuPanel').innerHTML =
+    [`<div class="dd-item ${icSbuFilter==='all'?'active':''}" onclick="setIcSbuFilter('all')">All SBUs</div>`]
+    .concat(sbus.map(s=>`<div class="dd-item ${icSbuFilter===s?'active':''}" onclick="setIcSbuFilter('${s.replace(/'/g,"\\'")}')">${escapeHtml(s)}</div>`)).join('');
+  document.getElementById('ic-monthPanel').innerHTML =
+    [`<div class="dd-item ${icMonthFilter==='all'?'active':''}" onclick="setIcMonthFilter('all')">All months</div>`]
+    .concat(MONTHS.map((m,i)=>`<div class="dd-item ${icMonthFilter===i?'active':''}" onclick="setIcMonthFilter(${i})">${m}</div>`)).join('');
+  const years = [...new Set(icCards.map(c=>cardYear(c)).filter(y=>y))].sort((a,b)=>b-a);
+  document.getElementById('ic-yearPanel').innerHTML =
+    [`<div class="dd-item ${icYearFilter==='all'?'active':''}" onclick="setIcYearFilter('all')">All years</div>`]
+    .concat(years.map(y=>`<div class="dd-item ${icYearFilter===y?'active':''}" onclick="setIcYearFilter(${y})">${y}</div>`)).join('');
+}
+function setIcSbuFilter(v){ icSbuFilter=v; const b=document.getElementById('ic-sbuBtn'); b.textContent=(v==='all'?'SBU: All ▾':v+' ▾'); b.classList.toggle('filtered',v!=='all'); document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open')); renderIc(); }
+function setIcMonthFilter(v){ icMonthFilter=v; const b=document.getElementById('ic-monthBtn'); b.textContent=(v==='all'?'Month: All ▾':MONTHS[v]+' ▾'); b.classList.toggle('filtered',v!=='all'); document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open')); renderIc(); }
+function setIcYearFilter(v){ icYearFilter=v; const b=document.getElementById('ic-yearBtn'); b.textContent=(v==='all'?'Year: All ▾':v+' ▾'); b.classList.toggle('filtered',v!=='all'); document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open')); renderIc(); }
+
+function showTargetPicker(id){ icCards.find(c=>c.id===id)._picking = true; renderIc(); }
+function cancelPick(id){ delete icCards.find(c=>c.id===id)._picking; renderIc(); }
+
+async function confirmAccept(id){
+  const input = document.getElementById('target-'+id);
+  const val = input.value;
+  if(!val){ input.focus(); return; }
+  const accepted = todayISO();
+  try{
+    await sbFetch(`${IC_TABLE}?id=eq.${id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'Ongoing', target_date: val, accepted_date: accepted })
+    });
+  }catch(e){
+    console.error('confirmAccept failed', e);
+    showToast('Failed to update — check connection');
+    return;
+  }
+  await loadIcCards();
+  showToast('Marked as ongoing — now available in the Savings Form');
+  renderIc();
+}
+
+async function rejectCard(id){
+  try{
+    await sbFetch(`${IC_TABLE}?id=eq.${id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'Rejected' })
+    });
+  }catch(e){
+    console.error('rejectCard failed', e);
+    showToast('Failed to reject — check connection');
+    return;
+  }
+  await loadIcCards();
+  showToast('Card marked as rejected');
+  refreshIcCardNoPreview();
+  renderIc();
+}
+async function deleteIcCard(id){
+  try{
+    await sbFetch(`${IC_TABLE}?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+  }catch(e){
+    console.error('deleteIcCard failed', e);
+    showToast('Failed to delete — check connection');
+    return;
+  }
+  icCards = icCards.filter(c=>c.id!==id);
+  showToast('Card deleted');
+  refreshIcCardNoPreview();
+  renderIc();
+}
+async function hideIcCard(id){
+  try{
+    await sbFetch(`${IC_TABLE}?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ hidden: true }) });
+  }catch(e){ console.error('hideIcCard failed', e); }
+  const c = icCards.find(c=>c.id===id); if(c) c.hidden = true;
+  renderIc();
+}
+async function unhideIcCard(id){
+  try{
+    await sbFetch(`${IC_TABLE}?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ hidden: false }) });
+  }catch(e){ console.error('unhideIcCard failed', e); }
+  const c = icCards.find(c=>c.id===id); if(c) c.hidden = false;
+  renderIc();
+}
+
+function renderIc(){
+  const list = document.getElementById('icList');
+  let filtered;
+  if(currentIcTab === 'hidden') filtered = icCards.filter(c=>c.hidden);
+  else if(currentIcTab === 'all') filtered = icCards.filter(c=>!c.hidden);
+  else filtered = icCards.filter(c=>!c.hidden && c.status===currentIcTab);
+
+  // ADDED: apply SBU + date filters
+  buildIcFilterPanels();
+  filtered = filtered.filter(c=>{
+    const okSbu = icSbuFilter==='all' || c.sbu===icSbuFilter;
+    const okMonth = icMonthFilter==='all' || cardMonthIndex(c)===icMonthFilter;
+    const okYear = icYearFilter==='all' || cardYear(c)===icYearFilter;
+    return okSbu && okMonth && okYear;
+  });
+
+  if(filtered.length===0){
+    list.innerHTML = `<div class="empty"><p>${icCards.length===0 ? 'No improvement cards logged yet — use the form.' : 'Nothing in this view.'}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => `
+    <div class="ic-card">
+      <div class="ic-top">
+        <div class="ic-title-group">
+          <span class="ic-cardno">${escapeHtml(c.cardno)}</span>
+          <span class="badge ${c.status}">${c.status==='ongoing' ? 'Ongoing' : c.status==='rejected' ? 'Rejected' : c.status==='locked' ? escapeHtml(c.rawStatus) : 'Pending'}</span>
+        </div>
+        <div class="ic-meta"><span>${escapeHtml(c.sbu)}</span><span>Logged ${c.created}</span></div>
+      </div>
+      <div class="ic-tags">
+        <span class="tag">${escapeHtml(c.dept)}</span>
+        <span class="tag">By ${escapeHtml(c.provider)}</span>
+      </div>
+      <div class="ic-body"><span class="label">Details</span>${escapeHtml(c.details)}</div>
+      ${c.benefit ? `<div class="ic-body"><span class="label">Expected Benefit</span>${escapeHtml(c.benefit)}</div>` : ''}
+
+      ${c.status === 'ongoing' ? `
+        <div class="ongoing-row"><span class="pulse"></span>Project ongoing — target completion <span class="target-date">${c.targetDate}</span></div>
+      ` : c.status === 'rejected' || c.status === 'locked' ? '' : c._picking ? `
+        <div class="decision-row">
+          <div class="target-inline">
+            <input type="date" id="target-${c.id}" />
+            <button class="btn small green" onclick="confirmAccept(${c.id})">Confirm target</button>
+          </div>
+          <button class="btn small ghost" onclick="cancelPick(${c.id})">Cancel</button>
+        </div>
+      ` : `
+        <div class="decision-row">
+          <button class="btn small green" onclick="showTargetPicker(${c.id})">Accept</button>
+          <button class="btn small ghost-danger" onclick="rejectCard(${c.id})">Reject</button>
+        </div>
+      `}
+
+      <div class="card-footer">
+        ${c.hidden
+          ? `<button class="btn small ghost" onclick="unhideIcCard(${c.id})">Unhide</button>`
+          : `<button class="btn small ghost" onclick="hideIcCard(${c.id})">Hide</button>`
+        }
+        <button class="btn small ghost-danger" onclick="deleteIcCard(${c.id})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   PROBLEM SOLVING CARDS
+   ============================================================ */
+const PC_TABLE = 'accl_problem_solving_cards';
+
+function pcRowToCard(row){
+  const raw = row.status || 'Pending';
+  let status;
+  if(raw === 'Pending') status = 'pending';
+  else if(raw === 'Ongoing') status = 'ongoing';
+  else if(raw === 'Rejected') status = 'rejected';
+  else status = 'locked';
+  return {
+    id: row.id, sbu: row.sbu, cardno: row.card_no, dept: row.dept,
+    provider: row.provider, created: row.created_date,
+    problem: row.problem_description, rootCause: row.root_cause, corrective: row.corrective_action,
+    status, rawStatus: raw,
+    targetDate: row.target_date, acceptedDate: row.accepted_date, hidden: !!row.hidden
+  };
+}
+
+async function loadPcCards(){
+  try{
+    const rows = await sbFetch(`${PC_TABLE}?select=*&order=id.desc`);
+    pcCards = (rows||[]).map(pcRowToCard);
+  }catch(e){ console.error('loadPcCards failed', e); pcCards = []; }
+  refreshPcCardNoPreview();
+  renderPc();
+}
+
+async function logPcCard(){
+  const sbu = document.getElementById('ps-sbu').value;
+  const dept = document.getElementById('ps-dept').value;
+  const provider = document.getElementById('ps-provider').value.trim();
+  const created = document.getElementById('ps-created').value;
+  const details = document.getElementById('ps-details').value.trim();
+  const rootCause = document.getElementById('ps-rootcause').value.trim();
+  const corrective = document.getElementById('ps-corrective').value.trim();
+  const err = document.getElementById('ps-errBanner');
+
+  if(!sbu || !dept || !provider || !created || !details){
+    err.style.display='block'; return;
+  }
+  err.style.display='none';
+
+  const cardno = nextCardNo(pcCards, 'PSC') + ' — ' + dept;
+  try{
+    await sbFetch(PC_TABLE, { method: 'POST', body: JSON.stringify({
+      sbu, card_no: cardno, dept, provider, created_date: created,
+      problem_description: details, root_cause: rootCause || null, corrective_action: corrective || null,
+      status: 'Pending'
+    })});
+  }catch(e){
+    console.error('logPcCard failed', e);
+    showToast('Failed to save — check connection');
+    return;
+  }
+  await loadPcCards();
+  clearPcForm();
+  showToast(`Card ${cardno} logged — awaiting decision`);
+  refreshPcCardNoPreview();
+  renderPc();
+}
+
+function clearPcForm(){
+  document.getElementById('ps-sbu').value='';
+  document.getElementById('ps-dept').value='';
+  document.getElementById('ps-provider').value='';
+  document.getElementById('ps-created').value='';
+  document.getElementById('ps-details').value='';
+  document.getElementById('ps-rootcause').value='';
+  document.getElementById('ps-corrective').value='';
+}
+
+function setPcTab(t){
+  currentPcTab = t;
+  document.querySelectorAll('#view-pc .chip').forEach(el=>el.classList.toggle('active', el.dataset.f===t));
+  renderPc();
+}
+
+// ADDED: PC SBU + date filter dropdowns
+function togglePcDropdown(which){
+  const panel = document.getElementById('pc-'+which+'Panel');
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open'));
+  if(!isOpen) panel.classList.add('open');
+}
+function buildPcFilterPanels(){
+  const sbus = [...new Set(pcCards.map(c=>c.sbu).filter(Boolean))].sort();
+  document.getElementById('pc-sbuPanel').innerHTML =
+    [`<div class="dd-item ${pcSbuFilter==='all'?'active':''}" onclick="setPcSbuFilter('all')">All SBUs</div>`]
+    .concat(sbus.map(s=>`<div class="dd-item ${pcSbuFilter===s?'active':''}" onclick="setPcSbuFilter('${s.replace(/'/g,"\\'")}')">${escapeHtml(s)}</div>`)).join('');
+  document.getElementById('pc-monthPanel').innerHTML =
+    [`<div class="dd-item ${pcMonthFilter==='all'?'active':''}" onclick="setPcMonthFilter('all')">All months</div>`]
+    .concat(MONTHS.map((m,i)=>`<div class="dd-item ${pcMonthFilter===i?'active':''}" onclick="setPcMonthFilter(${i})">${m}</div>`)).join('');
+  const years = [...new Set(pcCards.map(c=>cardYear(c)).filter(y=>y))].sort((a,b)=>b-a);
+  document.getElementById('pc-yearPanel').innerHTML =
+    [`<div class="dd-item ${pcYearFilter==='all'?'active':''}" onclick="setPcYearFilter('all')">All years</div>`]
+    .concat(years.map(y=>`<div class="dd-item ${pcYearFilter===y?'active':''}" onclick="setPcYearFilter(${y})">${y}</div>`)).join('');
+}
+function setPcSbuFilter(v){ pcSbuFilter=v; const b=document.getElementById('pc-sbuBtn'); b.textContent=(v==='all'?'SBU: All ▾':v+' ▾'); b.classList.toggle('filtered',v!=='all'); document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open')); renderPc(); }
+function setPcMonthFilter(v){ pcMonthFilter=v; const b=document.getElementById('pc-monthBtn'); b.textContent=(v==='all'?'Month: All ▾':MONTHS[v]+' ▾'); b.classList.toggle('filtered',v!=='all'); document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open')); renderPc(); }
+function setPcYearFilter(v){ pcYearFilter=v; const b=document.getElementById('pc-yearBtn'); b.textContent=(v==='all'?'Year: All ▾':v+' ▾'); b.classList.toggle('filtered',v!=='all'); document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open')); renderPc(); }
+
+function showTargetPickerPc(id){ pcCards.find(c=>c.id===id)._picking = true; renderPc(); }
+function cancelPickPc(id){ delete pcCards.find(c=>c.id===id)._picking; renderPc(); }
+
+async function confirmAcceptPc(id){
+  const input = document.getElementById('target-pc-'+id);
+  const val = input.value;
+  if(!val){ input.focus(); return; }
+  const accepted = todayISO();
+  try{
+    await sbFetch(`${PC_TABLE}?id=eq.${id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'Ongoing', target_date: val, accepted_date: accepted })
+    });
+  }catch(e){
+    console.error('confirmAcceptPc failed', e);
+    showToast('Failed to update — check connection');
+    return;
+  }
+  await loadPcCards();
+  showToast('Marked as ongoing — now available in the Savings Form');
+  renderPc();
+}
+
+async function rejectPcCard(id){
+  try{
+    await sbFetch(`${PC_TABLE}?id=eq.${id}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'Rejected' })
+    });
+  }catch(e){
+    console.error('rejectPcCard failed', e);
+    showToast('Failed to reject — check connection');
+    return;
+  }
+  await loadPcCards();
+  showToast('Card marked as rejected');
+  refreshPcCardNoPreview();
+  renderPc();
+}
+async function deletePcCard(id){
+  try{
+    await sbFetch(`${PC_TABLE}?id=eq.${id}`, { method: 'DELETE', prefer: 'return=minimal' });
+  }catch(e){
+    console.error('deletePcCard failed', e);
+    showToast('Failed to delete — check connection');
+    return;
+  }
+  pcCards = pcCards.filter(c=>c.id!==id);
+  showToast('Card deleted');
+  refreshPcCardNoPreview();
+  renderPc();
+}
+async function hidePcCard(id){
+  try{
+    await sbFetch(`${PC_TABLE}?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ hidden: true }) });
+  }catch(e){ console.error('hidePcCard failed', e); }
+  const c = pcCards.find(c=>c.id===id); if(c) c.hidden = true;
+  renderPc();
+}
+async function unhidePcCard(id){
+  try{
+    await sbFetch(`${PC_TABLE}?id=eq.${id}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ hidden: false }) });
+  }catch(e){ console.error('unhidePcCard failed', e); }
+  const c = pcCards.find(c=>c.id===id); if(c) c.hidden = false;
+  renderPc();
+}
+
+function renderPc(){
+  const list = document.getElementById('pcList');
+  let filtered;
+  if(currentPcTab === 'hidden') filtered = pcCards.filter(c=>c.hidden);
+  else if(currentPcTab === 'all') filtered = pcCards.filter(c=>!c.hidden);
+  else filtered = pcCards.filter(c=>!c.hidden && c.status===currentPcTab);
+
+  // ADDED: apply SBU + date filters
+  buildPcFilterPanels();
+  filtered = filtered.filter(c=>{
+    const okSbu = pcSbuFilter==='all' || c.sbu===pcSbuFilter;
+    const okMonth = pcMonthFilter==='all' || cardMonthIndex(c)===pcMonthFilter;
+    const okYear = pcYearFilter==='all' || cardYear(c)===pcYearFilter;
+    return okSbu && okMonth && okYear;
+  });
+
+  if(filtered.length===0){
+    list.innerHTML = `<div class="empty"><p>${pcCards.length===0 ? 'No problem solving cards logged yet — use the form.' : 'Nothing in this view.'}</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => `
+    <div class="ic-card">
+      <div class="ic-top">
+        <div class="ic-title-group">
+          <span class="ic-cardno">${escapeHtml(c.cardno)}</span>
+          <span class="badge ${c.status}">${c.status==='ongoing' ? 'Ongoing' : c.status==='rejected' ? 'Rejected' : c.status==='locked' ? escapeHtml(c.rawStatus) : 'Pending'}</span>
+        </div>
+        <div class="ic-meta"><span>${escapeHtml(c.sbu)}</span><span>Logged ${c.created}</span></div>
+      </div>
+      <div class="ic-tags">
+        <span class="tag">${escapeHtml(c.dept)}</span>
+        <span class="tag">By ${escapeHtml(c.provider)}</span>
+      </div>
+      <div class="ic-body"><span class="label">Problem Description</span>${escapeHtml(c.problem)}</div>
+      ${c.rootCause ? `<div class="ic-body"><span class="label">Root Cause</span>${escapeHtml(c.rootCause)}</div>` : ''}
+      ${c.corrective ? `<div class="ic-body"><span class="label">Corrective / Remedial Action</span>${escapeHtml(c.corrective)}</div>` : ''}
+
+      ${c.status === 'ongoing' ? `
+        <div class="ongoing-row"><span class="pulse"></span>Project ongoing — target completion <span class="target-date">${c.targetDate}</span></div>
+      ` : c.status === 'rejected' || c.status === 'locked' ? '' : c._picking ? `
+        <div class="decision-row">
+          <div class="target-inline">
+            <input type="date" id="target-pc-${c.id}" />
+            <button class="btn small green" onclick="confirmAcceptPc(${c.id})">Confirm target</button>
+          </div>
+          <button class="btn small ghost" onclick="cancelPickPc(${c.id})">Cancel</button>
+        </div>
+      ` : `
+        <div class="decision-row">
+          <button class="btn small green" onclick="showTargetPickerPc(${c.id})">Accept</button>
+          <button class="btn small ghost-danger" onclick="rejectPcCard(${c.id})">Reject</button>
+        </div>
+      `}
+
+      <div class="card-footer">
+        ${c.hidden
+          ? `<button class="btn small ghost" onclick="unhidePcCard(${c.id})">Unhide</button>`
+          : `<button class="btn small ghost" onclick="hidePcCard(${c.id})">Hide</button>`
+        }
+        <button class="btn small ghost-danger" onclick="deletePcCard(${c.id})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   SAVINGS FORM (merged) — one entry form, 5 amount sections
+   ============================================================ */
+function buildCatFieldsHTML(){
+  return CATEGORIES.map(cat => {
+    const amountInput = `<input id="sv-amount-${cat.key}" type="number" placeholder="0.00" step="0.01" />`;
+    const amountWrapped = cat.prefix
+      ? `<div class="save-input-wrap"><span class="save-prefix">${cat.prefix}</span>${amountInput}</div>`
+      : amountInput;
+    const unitField = cat.unitMode === 'select'
+      ? `<select id="sv-uom-${cat.key}">${cat.unitOptions.map(o=>`<option>${escapeHtml(o)}</option>`).join('')}</select>`
+      : `<input id="sv-uom-${cat.key}" placeholder="Unit" value="${escapeHtml(cat.unitDefault)}" />`;
+    return `
+      <div class="section-divider">${escapeHtml(cat.chipLabel)}</div>
+      <label>${escapeHtml(cat.amountLabel)}</label>
+      <div class="row2">${amountWrapped}${unitField}</div>
+    `;
+  }).join('');
+}
+
+function buildCategoryChips(){
+  const row = document.getElementById('sv-categoryChipRow');
+  const all = `<button class="chip active" data-f="all" onclick="setCategoryFilter('all')">All categories</button>`;
+  const rest = CATEGORIES.map(cat =>
+    `<button class="chip" data-f="${cat.key}" onclick="setCategoryFilter('${cat.key}')">${escapeHtml(cat.chipLabel)}</button>`
+  ).join('');
+  row.innerHTML = all + rest;
+}
+
+function buildCatStats(){
+  const row = document.getElementById('sv-catStats');
+  row.innerHTML = CATEGORIES.map(cat => {
+    const catEntries = ledgerState.entries.filter(e => e.category === cat.key);
+    const total = catEntries.reduce((s,e)=>s+e.amount, 0);
+    const uoms = new Set(catEntries.map(e=>e.uom).filter(Boolean));
+    const unitLabel = uoms.size === 0 ? (cat.unitDefault || '') : (uoms.size === 1 ? [...uoms][0] : 'mixed units');
+    const prefix = cat.prefix || '';
+    return `
+      <div class="cat-stat-card">
+        <div class="n">${prefix}${fmtMoney(total)}</div>
+        <div class="l">${escapeHtml(cat.chipLabel)} ${unitLabel ? '· '+escapeHtml(unitLabel) : ''}</div>
+      </div>`;
+  }).join('');
+}
+
+function rowToEntry(row, categoryKey){
+  const monthly = row.monthly_values || {};
+  const amount = Object.values(monthly).reduce((s,v)=>s + (parseFloat(v)||0), 0);
+  return {
+    sl: row.sl ?? row.id,
+    dbId: row.id,
+    category: categoryKey,
+    source: row.source,
+    cardno: row.card_no,
+    section: row.section,
+    benefit: row.project_details,
+    created: row.start_date,
+    complete: row.completed_date,
+    ongoing: '',
+    amount,
+    uom: row.uom,
+    logged: row.created_at
+  };
+}
+
+async function loadEntries(){
+  try{
+    const results = await Promise.all(
+      Object.entries(TABLE_MAP).map(([catKey, table]) =>
+        sbFetch(`${table}?select=*&hidden=eq.false&order=id.desc`).then(rows => (rows||[]).map(r => rowToEntry(r, catKey)))
+      )
+    );
+    ledgerState.entries = results.flat().sort((a,b) => new Date(b.logged||0) - new Date(a.logged||0));
+    ledgerState.nextSL = ledgerState.entries.reduce((m,e)=>Math.max(m,e.sl||0),0)+1;
+  }catch(e){
+    console.error('loadEntries failed', e);
+    ledgerState.entries = [];
+  }
+}
+
+function poolForSource(source){ return source === 'IC' ? icCards : pcCards; }
+
+function onSourceChange(key){
+  refreshCardNoOptions(key);
+  onCardNoSelect(key);
+}
+
+function refreshCardNoOptions(key){
+  const source = document.getElementById(key+'-source').value;
+  const sel = document.getElementById(key+'-cardno-select');
+  const pool = poolForSource(source);
+  const ongoing = pool.filter(c => c.status === 'ongoing');
+  const label = source === 'IC' ? 'improvement' : 'problem solving';
+  if(ongoing.length === 0){
+    sel.innerHTML = `<option value="">No ongoing ${label} cards yet</option>`;
+    return;
+  }
+  sel.innerHTML = ongoing.map(c =>
+    `<option value="${c.id}">${escapeHtml(c.cardno)} — ${escapeHtml(c.dept)}</option>`
+  ).join('');
+}
+
+function onCardNoSelect(key){
+  const source = document.getElementById(key+'-source').value;
+  const pool = poolForSource(source);
+  const sel = document.getElementById(key+'-cardno-select');
+  const id = parseInt(sel.value);
+  const c = pool.find(c => c.id === id);
+  const secEl = document.getElementById(key+'-section');
+  const benEl = document.getElementById(key+'-benefit');
+  const creEl = document.getElementById(key+'-created');
+  const ongEl = document.getElementById(key+'-ongoing');
+
+  if(!c){
+    secEl.value = '';
+    secEl.placeholder = 'Select a card above';
+    secEl.disabled = false; benEl.disabled = false; creEl.disabled = false; ongEl.disabled = false;
+    return;
+  }
+  // Department comes straight from Supabase (the card's own dept field) — always
+  // reflects the real value, whatever it is, instead of only matching a fixed list.
+  secEl.value = c.dept || '';
+  benEl.value = c.benefit || '';
+  creEl.value = c.created;
+  ongEl.value = c.acceptedDate || '';
+  secEl.disabled = true; benEl.disabled = true; creEl.disabled = true; ongEl.disabled = true;
+}
+
+function clearLedgerForm(){
+  document.getElementById('sv-benefit').value='';
+  document.getElementById('sv-created').value='';
+  document.getElementById('sv-ongoing').value='';
+  document.getElementById('sv-complete').value='';
+  CATEGORIES.forEach(cat=>{
+    document.getElementById('sv-amount-'+cat.key).value='';
+    if(cat.unitMode === 'text') document.getElementById('sv-uom-'+cat.key).value = cat.unitDefault;
+  });
+  document.getElementById('sv-source').value='IC';
+  document.getElementById('sv-section').value='';
+  document.getElementById('sv-section').placeholder='Select a card above';
+  document.getElementById('sv-section').disabled=false;
+  document.getElementById('sv-benefit').disabled=false;
+  document.getElementById('sv-created').disabled=false;
+  document.getElementById('sv-ongoing').disabled=false;
+  document.getElementById('sv-err').style.display='none';
+  onSourceChange('sv');
+}
+
+async function addEntry(){
+  const source = document.getElementById('sv-source').value;
+  const sel = document.getElementById('sv-cardno-select');
+  const opt = sel.options[sel.selectedIndex];
+  const cardno = opt ? opt.textContent.split(' — ')[0] : '';
+  const err = document.getElementById('sv-err');
+
+  if(!cardno){ err.style.display='block'; return; }
+
+  const section = document.getElementById('sv-section').value;
+  const benefit = document.getElementById('sv-benefit').value.trim();
+  const created = document.getElementById('sv-created').value || null;
+  const complete = document.getElementById('sv-complete').value || null;
+  const monthKey = monthKeyFromDate(created);
+
+  const inserts = [];
+  CATEGORIES.forEach(cat=>{
+    const raw = document.getElementById('sv-amount-'+cat.key).value;
+    if(raw === '' || raw === null) return;
+    const amount = parseFloat(raw);
+    if(isNaN(amount)) return;
+    const uom = document.getElementById('sv-uom-'+cat.key).value.trim();
+    inserts.push({
+      table: TABLE_MAP[cat.key],
+      body: {
+        sl: ledgerState.nextSL++,
+        source, card_no: cardno,
+        project_details: benefit,
+        section,
+        uom,
+        start_date: created,
+        completed_date: complete,
+        monthly_values: { [monthKey]: amount }
+      }
+    });
+  });
+
+  if(inserts.length === 0){ err.style.display='block'; return; }
+  err.style.display='none';
+
+  try{
+    await Promise.all(inserts.map(({table, body}) =>
+      sbFetch(table, { method: 'POST', body: JSON.stringify(body) })
+    ));
+  }catch(e){
+    console.error('addEntry failed', e);
+    showToast('Failed to save — check connection');
+    return;
+  }
+
+  await loadEntries();
+  clearLedgerForm();
+  showToast(inserts.length === 1 ? '1 entry added to ledger' : `${inserts.length} entries added to ledger`);
+  render();
+}
+
+async function deleteEntry(sl){
+  const entry = ledgerState.entries.find(e => e.sl === sl);
+  if(!entry) return;
+  const table = TABLE_MAP[entry.category];
+  try{
+    await sbFetch(`${table}?id=eq.${entry.dbId}`, { method: 'PATCH', prefer: 'return=minimal', body: JSON.stringify({ hidden: true }) });
+  }catch(e){
+    console.error('deleteEntry failed', e);
+    showToast('Failed to remove — check connection');
+    return;
+  }
+  ledgerState.entries = ledgerState.entries.filter(e => e.sl !== sl);
+  showToast('Entry removed from dashboard');
+  render();
+}
+
+function setSourceFilter(f){
+  ledgerState.sourceFilter = f;
+  document.querySelectorAll('#sv-sourceChipRow .chip').forEach(c=>c.classList.toggle('active', c.dataset.f===f));
+  render();
+}
+function setCategoryFilter(f){
+  ledgerState.categoryFilter = f;
+  document.querySelectorAll('#sv-categoryChipRow .chip').forEach(c=>c.classList.toggle('active', c.dataset.f===f));
+  render();
+}
+
+function toggleDropdown(which){
+  const panel = document.getElementById('sv-'+which+'Panel');
+  const isOpen = panel.classList.contains('open');
+  document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open'));
+  if(!isOpen) panel.classList.add('open');
+}
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.dropdown-wrap')){
+    document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open'));
+  }
+});
+
+// ADDED: savings SBU filter
+function buildSbuPanel(){
+  const sbus = [...new Set(ledgerState.entries.map(e=>entrySbu(e)).filter(Boolean))].sort();
+  const panel = document.getElementById('sv-sbuPanel');
+  const items = [`<div class="dd-item ${ledgerState.sbu==='all'?'active':''}" onclick="setSbuFilter('all')">All SBUs</div>`]
+    .concat(sbus.map(s=>`<div class="dd-item ${ledgerState.sbu===s?'active':''}" onclick="setSbuFilter('${s.replace(/'/g,"\\'")}')">${escapeHtml(s)}</div>`));
+  panel.innerHTML = items.join('');
+}
+function setSbuFilter(v){
+  ledgerState.sbu = v;
+  const btn = document.getElementById('sv-sbuBtn');
+  btn.textContent = (v==='all' ? 'SBU: All ▾' : v+' ▾');
+  btn.classList.toggle('filtered', v!=='all');
+  document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open'));
+  render();
+}
+
+function buildMonthPanel(){
+  const panel = document.getElementById('sv-monthPanel');
+  const items = [`<div class="dd-item ${ledgerState.month==='all'?'active':''}" onclick="setMonthFilter('all')">All months</div>`]
+    .concat(MONTHS.map((m,i)=>`<div class="dd-item ${ledgerState.month===i?'active':''}" onclick="setMonthFilter(${i})">${m}</div>`));
+  panel.innerHTML = items.join('');
+}
+function setMonthFilter(v){
+  ledgerState.month = v;
+  const btn = document.getElementById('sv-monthBtn');
+  btn.textContent = (v==='all' ? 'Month: All ▾' : MONTHS[v]+' ▾');
+  btn.classList.toggle('filtered', v!=='all');
+  document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open'));
+  render();
+}
+
+function entryDateForFilter(e){ return e.created || (e.logged ? e.logged.slice(0,10) : null); }
+
+function buildYearPanel(){
+  const years = new Set();
+  ledgerState.entries.forEach(e=>{ const d = entryDateForFilter(e); if(d) years.add(parseInt(d.slice(0,4))); });
+  const sorted = [...years].sort((a,b)=>b-a);
+  const list = sorted.length ? sorted : [new Date().getFullYear()];
+  const panel = document.getElementById('sv-yearPanel');
+  const items = [`<div class="dd-item ${ledgerState.year==='all'?'active':''}" onclick="setYearFilter('all')">All years</div>`]
+    .concat(list.map(y=>`<div class="dd-item ${ledgerState.year===y?'active':''}" onclick="setYearFilter(${y})">${y}</div>`));
+  panel.innerHTML = items.join('');
+}
+function setYearFilter(v){
+  ledgerState.year = v;
+  const btn = document.getElementById('sv-yearBtn');
+  btn.textContent = (v==='all' ? 'Year: All ▾' : v+' ▾');
+  btn.classList.toggle('filtered', v!=='all');
+  document.querySelectorAll('.dd-panel').forEach(p=>p.classList.remove('open'));
+  render();
+}
+
+function catLabel(key){
+  const c = CATEGORIES.find(c=>c.key===key);
+  return c ? c.chipLabel : key;
+}
+
+function render(){
+  buildCatStats();
+  buildSbuPanel();
+  buildMonthPanel();
+  buildYearPanel();
+
+  const q = document.getElementById('sv-searchBox').value.toLowerCase();
+  let filtered = ledgerState.entries.filter(e=>{
+    const matchesSource = ledgerState.sourceFilter==='all' || e.source===ledgerState.sourceFilter;
+    const matchesCategory = ledgerState.categoryFilter==='all' || e.category===ledgerState.categoryFilter;
+    const matchesSbu = ledgerState.sbu==='all' || entrySbu(e)===ledgerState.sbu;
+    const matchesSearch = !q || e.cardno.toLowerCase().includes(q) || (e.benefit||'').toLowerCase().includes(q) || (e.section||'').toLowerCase().includes(q);
+    const d = entryDateForFilter(e);
+    const matchesMonth = ledgerState.month==='all' || (d && parseInt(d.slice(5,7))-1 === ledgerState.month);
+    const matchesYear = ledgerState.year==='all' || (d && parseInt(d.slice(0,4)) === ledgerState.year);
+    return matchesSource && matchesCategory && matchesSbu && matchesSearch && matchesMonth && matchesYear;
+  });
+
+  const list = document.getElementById('sv-entryList');
+  if(filtered.length===0){
+    list.innerHTML = `<div class="empty">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5C6774" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <p>${ledgerState.entries.length===0 ? 'No entries yet — log the first one on the left.' : 'Nothing matches these filters.'}</p>
+    </div>`;
+  } else {
+    list.innerHTML = filtered.map(e => `
+      <div class="entry">
+        <div class="sl">${String(e.sl).padStart(2,'0')}</div>
+        <div class="body">
+          <div class="top">
+            <span class="tag ${e.source.toLowerCase()}">${e.source}</span>
+            <span class="tag cat">${escapeHtml(catLabel(e.category))}</span>
+            <span class="tag">${escapeHtml(e.section||'')}</span>
+            <span class="card-no">${escapeHtml(e.cardno)}</span>
+          </div>
+          ${e.benefit ? `<div class="details">${escapeHtml(e.benefit)}</div>` : ''}
+          <div class="meta">
+            ${e.created ? `<span>Created ${e.created}</span>` : ''}
+            ${e.ongoing ? `<span>Ongoing ${e.ongoing}</span>` : ''}
+            ${e.complete ? `<span>Complete ${e.complete}</span>` : ''}
+          </div>
+        </div>
+        <div class="entry-actions">
+          <div class="amount">${fmtMoney(e.amount)}${e.uom ? ' '+escapeHtml(e.uom) : ''}</div>
+          <button class="del" onclick="deleteEntry(${e.sl})" title="Remove">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  document.getElementById('sv-statCount').textContent = ledgerState.entries.length;
+  document.getElementById('sv-statIC').textContent = ledgerState.entries.filter(e=>e.source==='IC').length;
+  document.getElementById('sv-statPC').textContent = ledgerState.entries.filter(e=>e.source==='PC').length;
+
+  const bySection = {};
+  ledgerState.entries.forEach(e => bySection[e.section] = (bySection[e.section]||0) + 1);
+  const top = Object.entries(bySection).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('sv-statSection').textContent = top ? top[0] : '—';
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+(async function init(){
+  buildNav();
+  document.getElementById('sv-catFields').innerHTML = buildCatFieldsHTML();
+  buildCategoryChips();
+  await loadIcCards();
+  await loadPcCards();
+  await loadEntries();
+  onSourceChange('sv');
+  render();
+})();
+</script>
+</body>
+</html>

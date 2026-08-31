@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Operation Meeting Dashboard — AROPEX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#eef1f7;
+    --card:#ffffff;
+    --ink:#12141c;
+    --muted:#6b7280;
+    --line:#e6e9f0;
+    --purple:#7c5cff;
+    --blue:#2f6fed;
+    --green:#0fa968;
+    --amber:#d98c0d;
+    --indigo:#5b57e0;
+    --pink:#e0436b;
+    --danger:#e0436b;
+    --ok:#0fa968;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  /* ---------- top accent bar ---------- */
+  .top-accent{
+    height:4px;
+    background:linear-gradient(90deg, var(--purple), var(--indigo), var(--blue), var(--green), var(--amber), var(--pink));
+  }
+
+  /* ---------- header ---------- */
+  header{
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    box-shadow:0 1px 3px rgba(20,20,40,.03);
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:42px; height:42px; border-radius:12px;
+    background:linear-gradient(135deg, var(--purple), var(--pink));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:15px;
+    box-shadow:0 4px 10px rgba(124,92,255,.28);
+  }
+  .brand h1{margin:0; font-size:20px; font-weight:800; letter-spacing:-0.01em;}
+  .brand p{margin:2px 0 0; font-size:12.5px; color:var(--muted); font-weight:500;}
+  .date-picker{
+    display:flex; align-items:center; gap:10px;
+    background:#f3f2ff; border-radius:12px; padding:10px 16px;
+    border:1px solid #e7e3ff;
+  }
+  .date-picker .ic{
+    width:30px; height:30px; border-radius:8px; background:var(--indigo);
+    display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px;
+  }
+  .date-picker label{display:block; font-size:10.5px; letter-spacing:.08em; color:var(--muted); font-weight:700;}
+  .date-picker input{border:none; background:transparent; font-family:inherit; font-size:14.5px; font-weight:700; color:var(--ink);}
+  .date-picker .hint{font-size:10.5px; color:var(--muted); font-weight:500; max-width:150px;}
+
+  /* ---------- section labels ---------- */
+  .section-label{
+    grid-column:1 / span 2;
+    display:flex; align-items:center; gap:10px;
+    margin:6px 0 -6px;
+    font-size:11.5px; font-weight:800; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .section-label::after{
+    content:''; flex:1; height:1px; background:var(--line);
+  }
+  main > .section-label:first-child{margin-top:0;}
+  @media (max-width:1100px){
+    .section-label{grid-column:1 / -1;}
+  }
+
+  /* ---------- layout ---------- */
+  main{
+    padding:24px 28px 60px;
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:680px){
+    main{grid-template-columns:1fr;}
+  }
+
+  /* ---------- metric card ---------- */
+  .metric{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:0 1px 2px rgba(20,20,40,.04);
+    border-top:4px solid var(--accent, var(--purple));
+    position:relative;
+    transition:box-shadow .15s ease, transform .15s ease;
+  }
+  .metric:hover{
+    box-shadow:0 8px 20px rgba(20,20,40,.08);
+    transform:translateY(-1px);
+  }
+  .metric-top{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:12px;}
+  .metric-icon{
+    width:38px; height:38px; border-radius:11px;
+    background:color-mix(in srgb, var(--accent, var(--purple)) 14%, white);
+    display:flex; align-items:center; justify-content:center;
+    font-size:17px;
+  }
+  .metric-mtd{text-align:right;}
+  .metric-mtd .lbl{font-size:10px; letter-spacing:.1em; color:var(--muted); font-weight:700;}
+  .metric-mtd .val{font-size:19px; font-weight:800; color:var(--accent, var(--purple));}
+  .metric-title{
+    display:inline-block;
+    background:color-mix(in srgb, var(--accent, var(--purple)) 12%, white);
+    color:var(--accent, var(--purple));
+    font-weight:700; font-size:14.5px;
+    padding:7px 12px; border-radius:9px;
+    margin-bottom:14px;
+  }
+  .metric-lastday{display:flex; align-items:center; justify-content:space-between; font-size:11px; color:var(--muted); font-weight:700; letter-spacing:.04em; margin-bottom:6px;}
+  .metric-lastday b{color:var(--ink); font-size:12.5px;}
+  .bar{height:7px; border-radius:5px; background:#eef0f5; overflow:hidden; margin-bottom:16px;}
+  .bar > div{height:100%; background:var(--accent, var(--purple)); border-radius:5px;}
+  .metric-stats{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .metric-stats.extra{grid-template-columns:1fr 1fr 1fr;}
+  .stat-box{
+    border:1px solid var(--line); border-radius:10px;
+    padding:9px 6px; text-align:center;
+  }
+  .stat-box .lbl{font-size:9.5px; letter-spacing:.06em; color:var(--muted); font-weight:700; margin-bottom:3px;}
+  .stat-box .val{font-size:16px; font-weight:800;}
+  .missing{display:flex; align-items:center; gap:8px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line); flex-wrap:wrap;}
+  .missing .dot{width:7px; height:7px; border-radius:50%; background:var(--danger);}
+  .missing .lbl{font-size:10.5px; font-weight:700; color:var(--ink); letter-spacing:.02em;}
+  .chip{
+    background:#fdeaee; color:var(--danger); font-size:11px; font-weight:700;
+    padding:4px 9px; border-radius:20px;
+  }
+
+  /* ---------- overdue panel ---------- */
+  .overdue-panel{
+    grid-column:span 1;
+    background:var(--card); border-radius:var(--radius); padding:20px;
+    border-top:4px solid var(--pink);
+    box-shadow:0 1px 2px rgba(20,20,40,.04);
+  }
+  .panel-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .panel-head .ic{width:32px; height:32px; border-radius:9px; background:#fdeaee; color:var(--pink); display:flex; align-items:center; justify-content:center; font-size:15px;}
+  .panel-head h2{margin:0; font-size:15px; font-weight:800; letter-spacing:.02em;}
+  .overdue-item{
+    border-left:3px solid var(--pink); background:#fff7f8; border-radius:8px;
+    padding:12px 14px; margin-bottom:10px;
+  }
+  .overdue-item:last-child{margin-bottom:0;}
+  .overdue-item .h{font-weight:800; font-size:13.5px; margin-bottom:4px;}
+  .overdue-item .h .sbu-badge{color:var(--pink);}
+  .overdue-item .d{font-size:13px; color:#374151;}
+  .empty-note{color:var(--muted); font-size:13px; padding:6px 2px;}
+
+  /* ---------- projects panel ---------- */
+  .projects-panel{
+    grid-column:span 1;
+    background:var(--card); border-radius:var(--radius); padding:20px;
+    border-top:4px solid var(--green);
+    box-shadow:0 1px 2px rgba(20,20,40,.04);
+  }
+  .project-item{
+    border:1px solid var(--line); border-radius:10px;
+    padding:12px 14px; margin-bottom:10px;
+  }
+  .project-item:last-child{margin-bottom:0;}
+  .project-item .h{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; flex-wrap:wrap;}
+  .project-item .name{font-weight:800; font-size:13.5px;}
+  .project-item .sbu-badge{
+    background:#eafaf0; color:var(--green); font-size:10.5px; font-weight:700;
+    padding:3px 9px; border-radius:20px; white-space:nowrap;
+  }
+  .project-item .meta{display:flex; align-items:center; justify-content:space-between; font-size:11.5px; color:var(--muted); font-weight:700; margin-bottom:6px;}
+  .project-item .meta .overdue-tag{color:var(--danger);}
+  .project-item .pbar{height:7px; border-radius:5px; background:#eef0f5; overflow:hidden;}
+  .project-item .pbar > div{height:100%; background:var(--green); border-radius:5px;}
+
+  /* ---------- agenda tracker ---------- */
+  .agenda-panel{
+    background:var(--card); border-radius:var(--radius); padding:16px 18px;
+    border-top:4px solid var(--pink);
+    box-shadow:0 1px 2px rgba(20,20,40,.04);
+    grid-column: 1 / -1;
+  }
+  .agenda-count{font-size:12px; font-weight:700; color:var(--ink); margin:0 0 10px;}
+  .agenda-count b{color:var(--pink);}
+  .status-chips{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px;}
+  .status-chip{border:1px solid var(--line); border-radius:9px; padding:6px; text-align:center;}
+  .status-chip .lbl{font-size:8.5px; letter-spacing:.05em; color:var(--muted); font-weight:700;}
+  .status-chip .val{font-size:14px; font-weight:800;}
+  .agenda-controls{
+    display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr 1fr; gap:8px; align-items:center; margin-bottom:8px;
+  }
+  .agenda-controls input[type="text"], .agenda-controls select, .agenda-controls input[type="date"]{
+    width:100%; font-family:inherit; font-size:12.5px; padding:7px 9px;
+    border:1px solid var(--line); border-radius:8px; background:#fafbfd; color:var(--ink); margin-bottom:0;
+  }
+  .agenda-controls .row2{display:contents;}
+  .quick-row{display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; align-items:center;}
+  .btn-ghost{
+    border:1px solid var(--line); background:#fafbfd; color:var(--ink);
+    font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:8px; cursor:pointer;
+  }
+  .btn-quick{
+    border:1px solid #f5d3b8; background:#fff3e6; color:#c2670a;
+    font-size:11.5px; font-weight:700; padding:6px 11px; border-radius:8px; cursor:pointer;
+  }
+  .chk-row{display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; color:var(--ink); margin:0 0 8px;}
+  .agenda-list{max-height:280px; overflow-y:auto; margin:0 -4px; padding:0 4px;}
+  .agenda-item{border:1px solid var(--line); border-radius:10px; padding:9px 12px; margin-bottom:7px;}
+  .agenda-item .row1{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px;}
+  .agenda-item .idsbu{font-size:11.5px; font-weight:800; display:flex; align-items:center; gap:6px;}
+  .agenda-item .sbu-badge{background:#eef0ff; color:var(--indigo); font-size:9.5px; font-weight:800; padding:2px 6px; border-radius:6px;}
+  .agenda-item .status-badge{font-size:9.5px; font-weight:800; padding:2px 8px; border-radius:20px;}
+  .st-open{background:#fdeaee; color:var(--danger);}
+  .st-progress{background:#fff3e6; color:#c2670a;}
+  .st-completed{background:#e6f7ef; color:var(--ok);}
+  .st-overdue{background:#fdeaee; color:var(--danger);}
+  .st-cancelled{background:#f1f2f5; color:#6b7280;}
+  .agenda-item .body{font-size:12px; color:#374151; line-height:1.35;}
+  .agenda-item .tgt{font-size:11px; font-weight:700; margin-top:4px; color:var(--ink);}
+  .pagination{display:flex; align-items:center; justify-content:space-between; margin-top:10px;}
+  .pagination span{font-size:11px; font-weight:700; color:var(--muted); letter-spacing:.03em;}
+  .pagination button{
+    width:26px; height:26px; border-radius:7px; border:1px solid var(--line); background:#fff;
+    cursor:pointer; font-size:13px;
+  }
+  .pagination button:disabled{opacity:.4; cursor:default;}
+
+  @media (max-width:900px){
+    .agenda-controls{grid-template-columns:1fr 1fr;}
+  }
+
+  .load-note{padding:40px; text-align:center; color:var(--muted); font-size:14px; grid-column:1/-1;}
+  .assumption-note{
+    grid-column:1/-1; background:#fff3e6; border:1px solid #f5d3b8; color:#8a5a00;
+    border-radius:12px; padding:12px 16px; font-size:12.5px; line-height:1.5;
+  }
+</style>
+</head>
+<body>
+<div class="top-accent"></div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">AR</div>
+    <div>
+      <h1>Daily Operation Meeting Dashboard</h1>
+      <p>Operational Excellence · AKIJ Resource</p>
+    </div>
+  </div>
+  <div class="date-picker">
+    <div class="ic">📅</div>
+    <div>
+      <label>AGENDA TRACKER DATE</label>
+      <input type="date" id="agendaDate">
+    </div>
+    <div class="hint">Filters the Agenda Tracker only — card metrics always show MTD &amp; yesterday.</div>
+  </div>
+</header>
+
+<main id="mainGrid">
+  <div class="load-note" id="loadNote">Loading live data from the database…</div>
+</main>
+
+<script>
+(async function(){
+
+  // =====================================================================
+  // SETUP — Flask API endpoints & fatal-error helper
+  // =====================================================================
+  const API_DASH  = "http://127.0.0.1:5003/api/dashboard";
+  const API_AGENDA = "http://127.0.0.1:5003/api/agenda";
+  const API_CHIPS = "http://127.0.0.1:5003/api/agenda/status-chips";
+
+  function showFatal(msg){
+    document.getElementById('mainGrid').innerHTML =
+      `<div class="load-note">Failed to load: ${msg} — please reload the page or check your connection.</div>`;
+  }
+
+  // =====================================================================
+  // DATE HELPERS
+  // =====================================================================
+  function toISO(d){ return d.toISOString().slice(0,10); }
+  const today = new Date();
+  const todayStr = toISO(today);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthStartStr = toISO(monthStart);
+  const elapsedDays = today.getDate();
+  const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
+  const yesterdayStr = toISO(yesterday);
+  const todayNextStr = toISO(new Date(today.getTime() + 86400000));
+
+  // =====================================================================
+  // METRIC CARD CONFIG
+  // =====================================================================
+  const METRICS = [
+    { key:'production_tracking',       label:'Production Tracking',       icon:'📈', color:'var(--purple)', kind:'four_h' },
+    { key:'qcp_audit',                 label:'QCP Audit',                 icon:'🛡️', color:'var(--blue)',   kind:'qcp' },
+    { key:'kaizen',                    label:'Kaizen',                    icon:'⚡', color:'var(--green)',  kind:'card', isMonthly:true },
+    { key:'problem_solving',           label:'Problem Solving',           icon:'🧩', color:'var(--green)',  kind:'card', isMonthly:true },
+    { key:'5s_floor_audit',            label:'5S Floor Audit',            icon:'✨', color:'var(--amber)',  kind:'5s', isPct:true },
+    { key:'daily_operation_meeting',   label:'Daily Operation Meeting',   icon:'👥', color:'var(--indigo)', kind:'form', field:'daily_operation_meeting' },
+    { key:'daily_improvement_meeting', label:'Daily Improvement Meeting', icon:'📊', color:'var(--blue)',   kind:'form', field:'daily_improvement_meeting' },
+  ];
+
+  try {
+
+    // =====================================================================
+    // STEP 1 — Load everything from the backend in one call
+    // =====================================================================
+    const dashRes = await fetch(API_DASH + '?monthStart=' + monthStartStr + '&today=' + todayStr +
+      '&yesterday=' + yesterdayStr + '&todayNext=' + todayNextStr);
+    if(!dashRes.ok) throw new Error('dashboard load failed (' + dashRes.status + '): ' + (await dashRes.text()));
+    const D = await dashRes.json();
+
+    const targetRows = D.targets || [];
+    const SBU_LIST = D.sbuList || [];
+
+    function dailyTargetTotal(metricKey){
+      return targetRows.reduce((sum, r) => sum + (Number(r[metricKey]) || 0), 0);
+    }
+    function sbusWithTarget(metricKey){
+      return targetRows.filter(r => (Number(r[metricKey]) || 0) > 0).map(r => r.sbu);
+    }
+
+    const formMonthRes    = { data: D.formMonth || [] };
+    const formYestRes     = { data: D.formYesterday || [] };
+    const qcpMonthRes     = { data: D.qcpMonth || [] };
+    const qcpYestRes      = { data: D.qcpYesterday || [] };
+    const fiveSMonthRes   = { data: D.fiveSMonth || [] };
+    const fiveSYestRes    = { data: D.fiveSYesterday || [] };
+    const kaizenAllRes    = { count: D.kaizenOngoing };
+    const kaizenMonthRes  = { data: D.kaizenMonth || [] };
+    const kaizenYestRes   = { data: D.kaizenYest || [] };
+    const psAllRes        = { count: D.psOngoing };
+    const psMonthRes      = { data: D.psMonth || [] };
+    const psYestRes       = { data: D.psYest || [] };
+    const kzRejRes        = { count: D.kaizenRejected };
+    const kzCompRes       = { count: D.kaizenCompleted };
+    const psRejRes        = { count: D.psRejected };
+    const psCompRes       = { count: D.psCompleted };
+
+    function uniqSbus(rows){ return [...new Set(rows.map(r => r.sbu))]; }
+    function missingSbus(metricKey, presentSbus){
+      const eligible = sbusWithTarget(metricKey);
+      return eligible.filter(s => !presentSbus.includes(s));
+    }
+
+    const cardData = {};
+
+    // ---- Production Tracking ----
+    {
+      const mtdActual = formMonthRes.data.reduce((s,r)=> s + (Number(r.four_h_tracking_meeting_count)||0), 0);
+      const yestActual = formYestRes.data.reduce((s,r)=> s + (Number(r.four_h_tracking_meeting_count)||0), 0);
+      cardData.production_tracking = {
+        mtdActual, yestActual,
+        missing: missingSbus('production_tracking', uniqSbus(formYestRes.data.filter(r=>r.four_h_tracking_meeting_count!==null)))
+      };
+    }
+
+    // ---- QCP Audit ----
+    {
+      cardData.qcp_audit = {
+        mtdActual: qcpMonthRes.data.length,
+        yestActual: qcpYestRes.data.length,
+        missing: missingSbus('qcp_audit', uniqSbus(qcpYestRes.data)),
+      };
+    }
+
+    // ---- 5S Floor Audit ----
+    {
+      function avgPct(rows){
+        const vals = rows.map(r => Number(r.final_score_pct)).filter(v => !isNaN(v));
+        return vals.length ? (vals.reduce((s,v)=>s+v,0) / vals.length) : 0;
+      }
+      cardData['5s_floor_audit'] = {
+        mtdActual: avgPct(fiveSMonthRes.data),
+        yestActual: avgPct(fiveSYestRes.data),
+        missing: missingSbus('5s_floor_audit', uniqSbus(fiveSYestRes.data)),
+      };
+    }
+
+    // ---- Daily Operation / Improvement Meeting ----
+    ['daily_operation_meeting','daily_improvement_meeting'].forEach(fieldKey => {
+      const mtdRows = formMonthRes.data.filter(r => r[fieldKey] === 1);
+      const yestRows = formYestRes.data.filter(r => r[fieldKey] === 1);
+      cardData[fieldKey] = {
+        mtdActual: mtdRows.length,
+        yestActual: yestRows.length,
+        missing: missingSbus(fieldKey, uniqSbus(yestRows)),
+      };
+    });
+
+    // ---- Kaizen ----
+    const kaizenLastDate = kaizenYestRes.data.length ? kaizenYestRes.data[0].created_date : null;
+    const kaizenLastRows = kaizenLastDate ? kaizenYestRes.data.filter(r => r.created_date === kaizenLastDate) : [];
+    cardData.kaizen = {
+      mtdActual: kaizenMonthRes.data.length,
+      yestActual: kaizenLastRows.length,
+      lastDate: kaizenLastDate,
+      missing: missingSbus('kaizen', uniqSbus(kaizenLastRows)),
+      ongoing: kaizenAllRes.count ?? kaizenAllRes.data.length,
+      rejected: kzRejRes.count ?? 0,
+      completed: kzCompRes.count ?? 0,
+    };
+
+    // ---- Problem Solving ----
+    const psLastDate = psYestRes.data.length ? psYestRes.data[0].created_date : null;
+    const psLastRows = psLastDate ? psYestRes.data.filter(r => r.created_date === psLastDate) : [];
+    cardData.problem_solving = {
+      mtdActual: psMonthRes.data.length,
+      yestActual: psLastRows.length,
+      lastDate: psLastDate,
+      missing: missingSbus('problem_solving', uniqSbus(psLastRows)),
+      ongoing: psAllRes.count ?? psAllRes.data.length,
+      rejected: psRejRes.count ?? 0,
+      completed: psCompRes.count ?? 0,
+    };
+
+    // =====================================================================
+    // STEP 3 — Render the 7 metric cards
+    // =====================================================================
+    const main = document.getElementById('mainGrid');
+    main.innerHTML = '';
+
+    const dailyLabel = document.createElement('div');
+    dailyLabel.className = 'section-label';
+    dailyLabel.textContent = `Today's Performance · ${todayStr}`;
+    main.appendChild(dailyLabel);
+
+    METRICS.forEach(m => {
+      const d = cardData[m.key];
+      let dailyTarget, mtdTarget, mtdPct, lastDayPct, targetLabel, actualLabel;
+
+      if (m.isPct) {
+        const targetPctRows = targetRows.map(r => Number(r[m.key]) || 0).filter(v => v > 0);
+        const targetPct = targetPctRows.length ? (targetPctRows.reduce((s,v)=>s+v,0) / targetPctRows.length) : 0;
+        dailyTarget = targetPct;
+        mtdTarget = targetPct;
+        mtdPct = targetPct > 0 ? (d.mtdActual / targetPct * 100) : 0;
+        lastDayPct = targetPct > 0 ? (d.yestActual / targetPct * 100) : 0;
+        targetLabel = `${targetPct.toFixed(0)}%`;
+        actualLabel = `${d.mtdActual.toFixed(2)}%`;
+      } else if (m.isMonthly) {
+        const monthlyTarget = dailyTargetTotal(m.key);
+        dailyTarget = monthlyTarget;
+        mtdTarget = monthlyTarget;
+        mtdPct = monthlyTarget > 0 ? (d.mtdActual / monthlyTarget * 100) : 0;
+        lastDayPct = monthlyTarget > 0 ? (d.yestActual / monthlyTarget * 100) : 0;
+        targetLabel = monthlyTarget.toLocaleString();
+        actualLabel = d.mtdActual.toLocaleString();
+      } else {
+        dailyTarget = dailyTargetTotal(m.key);
+        mtdTarget = dailyTarget * elapsedDays;
+        mtdPct = mtdTarget > 0 ? (d.mtdActual / mtdTarget * 100) : 0;
+        lastDayPct = dailyTarget > 0 ? (d.yestActual / dailyTarget * 100) : 0;
+        targetLabel = mtdTarget.toLocaleString();
+        actualLabel = d.mtdActual.toLocaleString();
+      }
+
+      const el = document.createElement('div');
+      el.className = 'metric';
+      el.style.setProperty('--accent', m.color);
+
+      const extraStats = (m.kind === 'card') ? `
+        <div class="metric-stats extra" style="margin-top:10px;">
+          <div class="stat-box"><div class="lbl">ONGOING</div><div class="val">${d.ongoing}</div></div>
+          <div class="stat-box"><div class="lbl">REJ. (MTD)</div><div class="val">${d.rejected}</div></div>
+          <div class="stat-box"><div class="lbl">COMPLETED (MTD)</div><div class="val">${d.completed}</div></div>
+        </div>` : '';
+
+      const isLastUpdatedCard = (m.kind === 'card');
+      const lastDayDateLabel = isLastUpdatedCard
+        ? (d.lastDate ? `LAST UPDATED (${d.lastDate})` : 'LAST UPDATED (no entries yet)')
+        : `LAST DAY (${yesterdayStr})`;
+      const missingLabel = isLastUpdatedCard ? 'MISSING SBU (LAST UPDATE)' : 'MISSING SBU (YESTERDAY)';
+
+      const missingHtml = d.missing.length ? `
+        <div class="missing">
+          <div class="dot"></div><div class="lbl">${missingLabel}</div>
+          ${d.missing.map(s => `<span class="chip">${s}</span>`).join('')}
+        </div>` : '';
+
+      el.innerHTML = `
+        <div class="metric-top">
+          <div class="metric-icon">${m.icon}</div>
+          <div class="metric-mtd"><div class="lbl">MTD</div><div class="val">${mtdPct.toFixed(2)}%</div></div>
+        </div>
+        <div class="metric-title">${m.label}</div>
+        <div class="metric-lastday"><span>${lastDayDateLabel}</span><b>${lastDayPct.toFixed(2)}%</b></div>
+        <div class="bar"><div style="width:${Math.min(100,lastDayPct)}%"></div></div>
+        <div class="metric-stats">
+          <div class="stat-box"><div class="lbl">TARGET (MTD)</div><div class="val">${targetLabel}</div></div>
+          <div class="stat-box"><div class="lbl">ACTUAL (MTD)</div><div class="val">${actualLabel}</div></div>
+        </div>
+        ${extraStats}
+        ${missingHtml}
+      `;
+      main.appendChild(el);
+    });
+
+    const alertsLabel = document.createElement('div');
+    alertsLabel.className = 'section-label';
+    alertsLabel.textContent = 'Attention & Projects';
+    main.appendChild(alertsLabel);
+
+    // =====================================================================
+    // STEP 4 — Overdue Alerts panel
+    // =====================================================================
+    const overdueRows = D.overdue || [];
+
+    const overduePanel = document.createElement('div');
+    overduePanel.className = 'overdue-panel';
+    overduePanel.innerHTML = `
+      <div class="panel-head"><div class="ic">⏰</div><h2>Overdue Alerts</h2></div>
+      <div id="overdueList"></div>
+    `;
+    main.appendChild(overduePanel);
+    const overdueList = overduePanel.querySelector('#overdueList');
+    if(!overdueRows.length){
+      overdueList.innerHTML = '<p class="empty-note">No overdue corrective actions right now.</p>';
+    } else {
+      overdueList.innerHTML = overdueRows.map(r => `
+        <div class="overdue-item">
+          <div class="h">#${r.id} · <span class="sbu-badge">${r.sbu}</span></div>
+          <div class="d">${(r.previous_agenda_corrective_actions || '(no description)').slice(0,140)}</div>
+          <div class="d" style="margin-top:4px; font-weight:700;">Target: ${r.target_completion_date}</div>
+        </div>
+      `).join('');
+    }
+
+    // =====================================================================
+    // STEP 5 — Recent Projects panel
+    // =====================================================================
+    const projectRows = D.projects || [];
+
+    const projectsPanel = document.createElement('div');
+    projectsPanel.className = 'projects-panel';
+    projectsPanel.innerHTML = `
+      <div class="panel-head"><div class="ic" style="background:#eafaf0; color:var(--green);">🗂️</div><h2>Recent Projects</h2></div>
+      <div id="projectsList"></div>
+    `;
+    main.appendChild(projectsPanel);
+    const projectsList = projectsPanel.querySelector('#projectsList');
+    const visibleProjects = projectRows.filter(r => (Number(r.progress) || 0) < 100).slice(0, 8);
+    if(!visibleProjects.length){
+      projectsList.innerHTML = '<p class="empty-note">No projects logged yet.</p>';
+    } else {
+      projectsList.innerHTML = visibleProjects.map(r => {
+        const pct = Math.max(0, Math.min(100, Number(r.progress) || 0));
+        const isOverdue = r.end_date && r.end_date < todayStr && pct < 100;
+        return `
+        <div class="project-item">
+          <div class="h">
+            <div class="name">${r.project_name || '(untitled project)'}</div>
+            <div class="sbu-badge">${r.sbu || '—'}</div>
+          </div>
+          <div class="meta">
+            <span>Target: ${r.end_date || '—'}${isOverdue ? ' <span class="overdue-tag">(overdue)</span>' : ''}</span>
+            <span>${pct.toFixed(0)}%</span>
+          </div>
+          <div class="pbar"><div style="width:${pct}%"></div></div>
+        </div>`;
+      }).join('');
+    }
+
+    // =====================================================================
+    // STEP 6 — Agenda Tracker panel (search/filter/paginate)
+    // =====================================================================
+    const agendaPanel = document.createElement('div');
+    agendaPanel.className = 'agenda-panel';
+    agendaPanel.innerHTML = `
+      <div class="panel-head"><div class="ic" style="background:#eef0ff; color:var(--indigo);">📋</div><h2>Agenda Tracker</h2></div>
+      <div class="agenda-count" id="agendaCount">Loading…</div>
+      <div class="status-chips" id="statusChips"></div>
+      <div class="agenda-controls">
+        <input type="text" id="agendaSearch" placeholder="Search agenda, owner, corrective action…">
+        <div class="row2">
+          <select id="agendaSbu"><option value="">All SBU</option>${SBU_LIST.map(s=>`<option value="${s}">${s}</option>`).join('')}</select>
+          <select id="agendaStatus"><option value="">All Status</option><option>Open</option><option>In Progress</option><option>Completed</option><option>Overdue</option><option>Cancelled</option></select>
+        </div>
+        <div class="row2">
+          <input type="date" id="agendaFrom">
+          <input type="date" id="agendaTo">
+        </div>
+      </div>
+      <div class="quick-row">
+        <button class="btn-quick" id="btnYesterday">⏱ Yesterday's Agenda</button>
+        <button class="btn-ghost" id="btnReset">↺ Reset</button>
+      </div>
+      <label class="chk-row"><input type="checkbox" id="agendaOverdue"> Overdue only</label>
+      <div class="agenda-list" id="agendaList"></div>
+      <div class="pagination">
+        <button id="pgPrev">‹</button>
+        <span id="pgLabel">Page 1 of 1</span>
+        <button id="pgNext">›</button>
+      </div>
+    `;
+    main.appendChild(agendaPanel);
+
+    // agenda state + wiring
+    const PAGE_SIZE = 6;
+    let page = 0;
+    const el = id => document.getElementById(id);
+    el('agendaDate').value = todayStr;
+
+    async function refreshStatusChips(){
+      try{
+        const res = await fetch(API_CHIPS);
+        if(!res.ok) throw new Error(res.status);
+        const counts = await res.json();
+        const statuses = ['Open','In Progress','Completed'];
+        el('statusChips').innerHTML = statuses.map(s => `
+          <div class="status-chip"><div class="lbl">${s.toUpperCase()}</div><div class="val">${counts[s] ?? 0}</div></div>
+        `).join('');
+      }catch(e){
+        el('statusChips').innerHTML = '';
+      }
+    }
+
+    async function loadAgenda(){
+      const search = el('agendaSearch').value.trim();
+      const sbu = el('agendaSbu').value;
+      const status = el('agendaStatus').value;
+      const from = el('agendaFrom').value;
+      const to = el('agendaTo').value;
+      const overdueOnly = el('agendaOverdue').checked;
+
+      const qs = new URLSearchParams({
+        page: page, size: PAGE_SIZE, today: todayStr
+      });
+      if(search) qs.set('search', search);
+      if(sbu) qs.set('sbu', sbu);
+      if(status) qs.set('status', status);
+      if(from) qs.set('from', from);
+      if(to) qs.set('to', to);
+      if(overdueOnly) qs.set('overdue', 'true');
+
+      let data, count;
+      try{
+        const res = await fetch(API_AGENDA + '?' + qs.toString());
+        if(!res.ok) throw new Error('agenda load failed (' + res.status + ')');
+        const out = await res.json();
+        data = out.rows || [];
+        count = out.count || 0;
+      }catch(e){
+        el('agendaList').innerHTML = `<p class="empty-note">Error: ${e.message}</p>`;
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+      el('agendaCount').innerHTML = `<b>${count}</b> agenda item${count===1?'':'s'} found`;
+      el('pgLabel').textContent = `Page ${page+1} of ${totalPages}`;
+      el('pgPrev').disabled = page === 0;
+      el('pgNext').disabled = page+1 >= totalPages;
+
+      const statusClass = s => ({
+        'Open':'st-open','In Progress':'st-progress','Completed':'st-completed',
+        'Overdue':'st-overdue','Cancelled':'st-cancelled'
+      }[s] || 'st-open');
+
+      if(!data.length){
+        el('agendaList').innerHTML = '<p class="empty-note">No matching agenda items.</p>';
+        return;
+      }
+      el('agendaList').innerHTML = data.map(r => `
+        <div class="agenda-item">
+          <div class="row1">
+            <div class="idsbu">#${r.id} <span class="sbu-badge">${r.sbu}</span> · ${r.meeting_date}</div>
+            ${r.status ? `<span class="status-badge ${statusClass(r.status)}">${r.status}</span>` : ''}
+          </div>
+          <div class="body">${(r.previous_agenda_corrective_actions||'').slice(0,160)}</div>
+          ${r.target_completion_date ? `<div class="tgt">Target: ${r.target_completion_date}${r.corrective_action_owner ? ' · Owner: '+r.corrective_action_owner : ''}</div>` : ''}
+        </div>
+      `).join('');
+    }
+
+    ['agendaSearch','agendaSbu','agendaStatus','agendaFrom','agendaTo','agendaOverdue'].forEach(id => {
+      el(id).addEventListener(id === 'agendaSearch' ? 'input' : 'change', () => { page = 0; loadAgenda(); });
+    });
+    el('btnYesterday').addEventListener('click', () => {
+      el('agendaFrom').value = yesterdayStr;
+      el('agendaTo').value = yesterdayStr;
+      page = 0; loadAgenda();
+    });
+    el('btnReset').addEventListener('click', () => {
+      el('agendaSearch').value=''; el('agendaSbu').value=''; el('agendaStatus').value='';
+      el('agendaFrom').value=''; el('agendaTo').value=''; el('agendaOverdue').checked=false;
+      page = 0; loadAgenda();
+    });
+    el('pgPrev').addEventListener('click', () => { if(page>0){ page--; loadAgenda(); } });
+    el('pgNext').addEventListener('click', () => { page++; loadAgenda(); });
+
+    const note = document.createElement('div');
+    note.className = 'assumption-note';
+    note.innerHTML = `Target (MTD) = daily target (summed across all SBUs) × <b>${elapsedDays}</b> elapsed days this month. Actual (MTD) = sum of this month's submitted data to date. "Ongoing" counts for Kaizen/Problem Solving are current totals (not date-limited) since they represent open backlog, not a daily figure — flag if you'd rather see this scoped differently.`;
+    main.appendChild(note);
+
+    await refreshStatusChips();
+    await loadAgenda();
+
+  } catch(err){
+    console.error(err);
+    showFatal(err.message || String(err));
+  }
+
+})();
+</script>
+
+</body>
+</html>

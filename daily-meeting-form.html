@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Meeting Form — AROPEX</title>
+<style>
+  :root{
+    --ink:#1c2321;
+    --paper:#f7f5f0;
+    --line:#d9d4c7;
+    --accent:#8a3b2a;
+    --accent-soft:#e8d9cf;
+    --ok:#3f6b4a;
+    --mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Iowan Old Style','Georgia',serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .masthead{
+    border-bottom:2px solid var(--ink);
+    padding:28px 24px 18px;
+    max-width:760px;
+    margin:0 auto;
+  }
+  .masthead .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 6px;
+  }
+  .masthead h1{
+    margin:0;
+    font-size:clamp(28px,5vw,40px);
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .masthead p{
+    margin:10px 0 0;
+    font-size:14.5px;
+    color:#4a4a44;
+    max-width:56ch;
+  }
+  .masthead p b{color:var(--ink);}
+
+  form{
+    max-width:760px;
+    margin:0 auto;
+    padding:8px 24px 80px;
+  }
+  fieldset{
+    border:none;
+    padding:0;
+    margin:0 0 26px;
+  }
+  .field{
+    border-top:1px solid var(--line);
+    padding:22px 0;
+  }
+  .field:last-child{border-bottom:1px solid var(--line);}
+  .field label{
+    display:block;
+    font-weight:600;
+    font-size:16px;
+    margin-bottom:4px;
+  }
+  .field label .req{color:var(--accent); margin-left:2px;}
+  .field .hint{
+    font-family:var(--mono);
+    font-size:12px;
+    color:#6b6b62;
+    margin:0 0 12px;
+    line-height:1.5;
+  }
+  input[type="date"],
+  input[type="number"],
+  input[type="text"],
+  select,
+  textarea{
+    width:100%;
+    font-family:'Iowan Old Style','Georgia',serif;
+    font-size:15.5px;
+    padding:11px 12px;
+    border:1px solid var(--line);
+    border-radius:3px;
+    background:#fff;
+    color:var(--ink);
+  }
+  textarea{
+    min-height:70px;
+    resize:vertical;
+    font-family:inherit;
+  }
+  select{appearance:auto;}
+  input:focus, select:focus, textarea:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+    border-color:var(--accent);
+  }
+
+  .radio-row{display:flex; gap:10px;}
+  .radio-pill{
+    flex:1;
+    position:relative;
+  }
+  .radio-pill input{
+    position:absolute;
+    opacity:0;
+    inset:0;
+    cursor:pointer;
+    width:100%;
+    height:100%;
+    margin:0;
+  }
+  .radio-pill span{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:11px 0;
+    border:1px solid var(--line);
+    border-radius:3px;
+    font-family:var(--mono);
+    font-size:13px;
+    letter-spacing:.03em;
+    background:#fff;
+    pointer-events:none;
+  }
+  .radio-pill input:checked + span{
+    background:var(--ink);
+    color:var(--paper);
+    border-color:var(--ink);
+  }
+  .radio-pill input:focus-visible + span{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  .target-note{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--accent);
+    margin-top:8px;
+    min-height:16px;
+  }
+
+  .submit-bar{
+    position:sticky;
+    bottom:0;
+    background:linear-gradient(180deg, transparent, var(--paper) 30%);
+    padding:24px 0 4px;
+  }
+  button{
+    width:100%;
+    padding:15px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    border-radius:3px;
+    font-family:var(--mono);
+    font-size:13px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  button:hover{background:var(--accent);}
+  button:disabled{opacity:.5; cursor:wait;}
+
+  .status{
+    max-width:760px;
+    margin:0 auto;
+    padding:0 24px;
+    font-family:var(--mono);
+    font-size:13px;
+  }
+  .status.ok{color:var(--ok);}
+  .status.err{color:var(--accent);}
+
+  ::selection{background:var(--accent-soft);}
+
+  .divider-section{
+    max-width:760px;
+    margin:0 auto;
+    padding:48px 24px 80px;
+    border-top:2px solid var(--ink);
+  }
+  .divider-section .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:24px 0 6px;
+  }
+  .divider-section h2{
+    margin:0;
+    font-size:clamp(22px,4vw,28px);
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .divider-section > p{
+    margin:10px 0 0;
+    font-size:14.5px;
+    color:#4a4a44;
+    max-width:56ch;
+  }
+
+  .search-row{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+    align-items:flex-end;
+  }
+  .search-row .field{
+    flex:1;
+    border-top:none;
+    padding:0;
+  }
+  .search-row label{
+    display:block;
+    font-family:var(--mono);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:6px;
+    color:#4a4a44;
+  }
+  .search-btn{
+    flex:0 0 auto;
+    width:auto;
+    padding:11px 20px;
+    background:var(--accent);
+  }
+  .search-btn:hover{background:var(--ink);}
+
+  .lookup-result{
+    margin-top:22px;
+  }
+  .lookup-empty{
+    font-family:var(--mono);
+    font-size:13px;
+    color:#6b6b62;
+    margin-top:22px;
+  }
+  .lookup-card{
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:18px 20px;
+    background:#fff;
+    margin-bottom:18px;
+  }
+  .lookup-card .lookup-head{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.04em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <p class="eyebrow">AROPEX · Daily Log</p>
+  <h1>Daily Meeting Form</h1>
+  <p>Record today's operation &amp; improvement meetings, agendas, corrective actions, and 4‑Hour Tracking count. <b>Submit before 9:30 AM.</b></p>
+</div>
+
+<form id="meetingForm" novalidate>
+
+  <div class="field">
+    <label for="meeting_date">Date <span class="req">*</span></label>
+    <p class="hint">Select the date this data is for.</p>
+    <input type="date" id="meeting_date" required>
+  </div>
+
+  <div class="field">
+    <label for="sbu">SBU <span class="req">*</span></label>
+    <p class="hint">Strategic Business Unit submitting this entry.</p>
+    <select id="sbu" required>
+      <option value="" disabled selected>Choose</option>
+      <option value="ACCL">ACCL</option>
+      <option value="AEL(Flour)">AEL (Flour)</option>
+      <option value="AIL">AIL</option>
+      <option value="APFIL">APFIL</option>
+      <option value="HRML">HRML</option>
+      <option value="FAL">FAL</option>
+      <option value="AAFL">AAFL</option>
+      <option value="AEL (Mustard Oil)">AEL (Mustard Oil)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label>Daily Operation Meeting <span class="req">*</span></label>
+    <p class="hint">Ex. If conducted then 1 or 0</p>
+    <div class="radio-row">
+      <label class="radio-pill"><input type="radio" name="daily_operation_meeting" value="1" required><span>1 — Conducted</span></label>
+      <label class="radio-pill"><input type="radio" name="daily_operation_meeting" value="0"><span>0 — Not conducted</span></label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Daily Improvement Meeting <span class="req">*</span></label>
+    <p class="hint">Ex. If conducted then 1 or 0</p>
+    <div class="radio-row">
+      <label class="radio-pill"><input type="radio" name="daily_improvement_meeting" value="1" required><span>1 — Conducted</span></label>
+      <label class="radio-pill"><input type="radio" name="daily_improvement_meeting" value="0"><span>0 — Not conducted</span></label>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="agenda">Agenda for Operation Meeting</label>
+    <p class="hint">Write down each topic on its own line (Agenda 01–05, as discussed).</p>
+    <textarea id="agenda" placeholder="01. ...&#10;02. ...&#10;03. ..."></textarea>
+  </div>
+
+  <div class="field">
+    <label for="corrective">Previous Agenda Corrective Actions</label>
+    <p class="hint">Write down topic details.</p>
+    <textarea id="corrective" placeholder="Your answer"></textarea>
+  </div>
+
+  <div class="field">
+    <label for="four_h">Count of 4 Hours Tracking Meeting <span class="req">*</span></label>
+    <p class="hint">Per-SBU target is loaded from the database.</p>
+    <input type="number" id="four_h" min="0" step="1" placeholder="0" required>
+    <p class="target-note" id="targetNote"></p>
+  </div>
+
+  <div class="field">
+    <label for="submitted_by">Submitted By</label>
+    <p class="hint">Your work email.</p>
+    <input type="email" id="submitted_by" placeholder="name@akijresource.com" pattern="[^@\s]+@[^@\s]+\.[^@\s]+" title="Please enter a valid email address">
+  </div>
+
+  <div class="submit-bar">
+    <button type="submit" id="submitBtn">Submit entry</button>
+  </div>
+</form>
+<p class="status" id="statusMsg"></p>
+
+<div class="divider-section">
+  <p class="eyebrow">AROPEX · Corrective Action</p>
+  <h2>Update Corrective Action</h2>
+  <p>Find existing entries by date, SBU, or both, then update the agenda, target completion date, status, owner, and due date.</p>
+
+  <div class="search-row">
+    <div class="field">
+      <label for="search_date">Date</label>
+      <input type="date" id="search_date">
+    </div>
+    <div class="field">
+      <label for="search_sbu">SBU</label>
+      <select id="search_sbu">
+        <option value="" disabled selected>Choose</option>
+        <option value="ACCL">ACCL</option>
+        <option value="AEL(Flour)">AEL (Flour)</option>
+        <option value="AIL">AIL</option>
+        <option value="APFIL">APFIL</option>
+        <option value="HRML">HRML</option>
+        <option value="FAL">FAL</option>
+        <option value="AAFL">AAFL</option>
+        <option value="AEL (Mustard Oil)">AEL (Mustard Oil)</option>
+      </select>
+    </div>
+    <button type="button" id="searchBtn" class="search-btn">Search</button>
+  </div>
+
+  <div id="lookupArea"></div>
+</div>
+
+<script>
+  // Visible failure banner so the page never just "does nothing" silently.
+  function showFatalError(msg){
+    const s = document.getElementById('statusMsg');
+    if(s){
+      s.textContent = 'Page failed to load properly: ' + msg + ' — please reload the page or check your connection.';
+      s.classList.add('err');
+    } else {
+      alert('Page failed to load properly: ' + msg);
+    }
+  }
+
+  const API          = "http://127.0.0.1:5005/api/entries";
+  const API_TARGETS  = "http://127.0.0.1:5005/api/targets";
+
+  let TARGETS = {};
+
+  // load per-SBU 4h tracking targets from the database
+  fetch(API_TARGETS)
+    .then(r => { if(!r.ok) throw new Error('targets load failed'); return r.json(); })
+    .then(d => { TARGETS = d || {}; document.getElementById('four_h').dispatchEvent(new Event('input')); })
+    .catch(e => { console.error('targets load error', e); TARGETS = {}; });
+
+  const sbuSelect = document.getElementById('sbu');
+  const fourHInput = document.getElementById('four_h');
+  const targetNote = document.getElementById('targetNote');
+
+  function updateTargetNote(){
+    const sbu = sbuSelect.value;
+    const val = parseInt(fourHInput.value, 10);
+    if(!sbu || !(sbu in TARGETS) || isNaN(val)){
+      targetNote.textContent = '';
+      return;
+    }
+    const target = TARGETS[sbu];
+    const diff = val - target;
+    if(diff === 0) targetNote.textContent = `On target (${target}).`;
+    else if(diff > 0) targetNote.textContent = `${diff} above target (${target}).`;
+    else targetNote.textContent = `${Math.abs(diff)} below target (${target}).`;
+  }
+  sbuSelect.addEventListener('change', updateTargetNote);
+  fourHInput.addEventListener('input', updateTargetNote);
+
+  const form = document.getElementById('meetingForm');
+  const statusMsg = document.getElementById('statusMsg');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    statusMsg.textContent = '';
+    statusMsg.className = 'status';
+
+    try {
+      const domOp = form.querySelector('input[name="daily_operation_meeting"]:checked');
+      const domImp = form.querySelector('input[name="daily_improvement_meeting"]:checked');
+
+      const payload = {
+        meeting_date: document.getElementById('meeting_date').value,
+        sbu: sbuSelect.value,
+        daily_operation_meeting: domOp ? parseInt(domOp.value, 10) : null,
+        daily_improvement_meeting: domImp ? parseInt(domImp.value, 10) : null,
+        agenda_operation_meeting: document.getElementById('agenda').value || null,
+        previous_agenda_corrective_actions: document.getElementById('corrective').value || null,
+        four_h_tracking_meeting_count: fourHInput.value === '' ? null : parseInt(fourHInput.value, 10),
+        submitted_by: document.getElementById('submitted_by').value || null
+      };
+
+      if(!payload.meeting_date || !payload.sbu || payload.daily_operation_meeting === null || payload.daily_improvement_meeting === null || payload.four_h_tracking_meeting_count === null){
+        statusMsg.textContent = 'Please fill in all required fields.';
+        statusMsg.classList.add('err');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting…';
+
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit entry';
+
+      if(!res.ok){
+        const text = await res.text();
+        statusMsg.textContent = 'Error: ' + text;
+        statusMsg.classList.add('err');
+      } else {
+        statusMsg.textContent = 'Saved. Entry recorded for ' + payload.sbu + ' on ' + payload.meeting_date + '.';
+        statusMsg.classList.add('ok');
+        form.reset();
+        targetNote.textContent = '';
+      }
+    } catch(err){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit entry';
+      statusMsg.textContent = 'Unexpected error: ' + err.message;
+      statusMsg.classList.add('err');
+      console.error(err);
+    }
+  });
+
+  // ---- Corrective action lookup & update ----
+  const searchBtn = document.getElementById('searchBtn');
+  const searchDate = document.getElementById('search_date');
+  const searchSbu = document.getElementById('search_sbu');
+  const lookupArea = document.getElementById('lookupArea');
+
+  searchBtn.addEventListener('click', async () => {
+    lookupArea.innerHTML = '';
+    const dateVal = searchDate.value;
+    const sbuVal = searchSbu.value;
+
+    if(!dateVal && !sbuVal){
+      lookupArea.innerHTML = '<p class="lookup-empty">Pick a date, an SBU, or both to search.</p>';
+      return;
+    }
+
+    searchBtn.disabled = true;
+    searchBtn.textContent = 'Searching…';
+
+    try {
+      const qs = new URLSearchParams();
+      if(dateVal) qs.set('date', dateVal);
+      if(sbuVal) qs.set('sbu', sbuVal);
+
+      const res = await fetch(API + '/search?' + qs.toString());
+      searchBtn.disabled = false;
+      searchBtn.textContent = 'Search';
+
+      if(!res.ok){
+        lookupArea.innerHTML = '<p class="lookup-empty">Error: ' + (await res.text()) + '</p>';
+        return;
+      }
+      const data = await res.json();
+      if(!data || data.length === 0){
+        lookupArea.innerHTML = '<p class="lookup-empty">No entries found for that search.</p>';
+        return;
+      }
+
+      data.forEach(renderLookupCard);
+    } catch(err){
+      searchBtn.disabled = false;
+      searchBtn.textContent = 'Search';
+      lookupArea.innerHTML = '<p class="lookup-empty">Unexpected error: ' + err.message + '</p>';
+      console.error(err);
+    }
+  });
+
+  function esc(v){
+    return v ? String(v).replace(/"/g, '&quot;') : '';
+  }
+
+  function renderLookupCard(row){
+    const statusOptions = ['Open','In Progress','Completed','Overdue','Cancelled'];
+    const statusOpts = statusOptions.map(s =>
+      `<option value="${s}" ${row.status === s ? 'selected' : ''}>${s}</option>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = 'lookup-card';
+    card.innerHTML = `
+      <div class="lookup-head">${row.sbu} — ${row.meeting_date}</div>
+
+      <div class="field" style="border-top:none; padding-top:0;">
+        <label for="upd_agenda_${row.id}">Agenda for Operation Meeting</label>
+        <textarea id="upd_agenda_${row.id}" placeholder="01. ...&#10;02. ...&#10;03. ...">${row.agenda_operation_meeting || ''}</textarea>
+      </div>
+
+      <div class="field">
+        <label for="upd_target_date_${row.id}">Target Completion Date</label>
+        <input type="date" id="upd_target_date_${row.id}" value="${row.target_completion_date || ''}">
+      </div>
+
+      <div class="field">
+        <label for="upd_status_${row.id}">Status</label>
+        <select id="upd_status_${row.id}">
+          <option value="" ${!row.status ? 'selected' : ''} disabled>Choose</option>
+          ${statusOpts}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="upd_owner_${row.id}">Corrective Action Owner</label>
+        <input type="text" id="upd_owner_${row.id}" value="${esc(row.corrective_action_owner)}" placeholder="Your answer">
+      </div>
+
+      <div class="field" style="border-bottom:none;">
+        <label for="upd_due_date_${row.id}">Corrective Action Due Date</label>
+        <input type="date" id="upd_due_date_${row.id}" value="${row.corrective_action_due_date || ''}">
+      </div>
+
+      <button type="button" id="updBtn_${row.id}" style="margin-top:16px;">Update entry</button>
+      <p class="status" id="updStatusMsg_${row.id}" style="padding:10px 0 0;"></p>
+    `;
+    lookupArea.appendChild(card);
+
+    document.getElementById(`updBtn_${row.id}`).addEventListener('click', async () => {
+      const updBtn = document.getElementById(`updBtn_${row.id}`);
+      const updStatusMsg = document.getElementById(`updStatusMsg_${row.id}`);
+      updBtn.disabled = true;
+      updBtn.textContent = 'Updating…';
+
+      try {
+        const payload = {
+          agenda_operation_meeting: document.getElementById(`upd_agenda_${row.id}`).value || null,
+          target_completion_date: document.getElementById(`upd_target_date_${row.id}`).value || null,
+          status: document.getElementById(`upd_status_${row.id}`).value || null,
+          corrective_action_owner: document.getElementById(`upd_owner_${row.id}`).value || null,
+          corrective_action_due_date: document.getElementById(`upd_due_date_${row.id}`).value || null
+        };
+
+        const res = await fetch(API + '/' + row.id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        updBtn.disabled = false;
+        updBtn.textContent = 'Update entry';
+
+        if(!res.ok){
+          updStatusMsg.textContent = 'Error: ' + (await res.text());
+          updStatusMsg.className = 'status err';
+        } else {
+          updStatusMsg.textContent = 'Updated.';
+          updStatusMsg.className = 'status ok';
+        }
+      } catch(err){
+        updBtn.disabled = false;
+        updBtn.textContent = 'Update entry';
+        updStatusMsg.textContent = 'Unexpected error: ' + err.message;
+        updStatusMsg.className = 'status err';
+        console.error(err);
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

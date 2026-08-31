@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>4-Hour Production Tracking — OPEX</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --ink:#1c1b19;
+    --steel-900:#14181c;
+    --steel-800:#1e252b;
+    --steel-700:#2a333a;
+    --steel-600:#3c4750;
+    --paper:#f2ede4;
+    --paper-dim:#e4ddcf;
+    --amber:#e08a2c;
+    --amber-dim:#c97418;
+    --green:#5a8f5a;
+    --red:#c0503e;
+    --font-display:'Oswald',ui-sans-serif,sans-serif;
+    --font-body:'Inter',ui-sans-serif,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--steel-900);
+    background-image:
+      linear-gradient(180deg, var(--steel-900) 0%, #10141750 100%);
+    color:var(--paper);
+    font-family:var(--font-body);
+    min-height:100vh;
+  }
+
+  /* header strip */
+  .topbar{
+    background:var(--steel-800);
+    border-bottom:3px solid var(--amber);
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:12px;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{
+    width:40px;height:40px;
+    background:var(--amber);
+    color:var(--steel-900);
+    font-family:var(--font-display);
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;
+    letter-spacing:0.5px;
+    clip-path: polygon(0 0, 100% 0, 100% 75%, 75% 100%, 0 100%);
+  }
+  .brand-text h1{
+    font-family:var(--font-display);
+    font-size:19px;
+    font-weight:600;
+    margin:0;
+    letter-spacing:0.3px;
+  }
+  .brand-text p{
+    margin:2px 0 0;
+    font-size:11.5px;
+    color:#9aa5ac;
+    letter-spacing:0.4px;
+  }
+  .clock{
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--amber);
+    text-align:right;
+  }
+  .clock small{display:block;color:#8b969d;font-size:10.5px;margin-top:2px;letter-spacing:1px;}
+
+  .layout{
+    display:grid;
+    grid-template-columns: 400px 1fr;
+    gap:0;
+    min-height:calc(100vh - 78px);
+  }
+  @media (max-width:900px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  /* FORM PANEL */
+  .form-panel{
+    background:var(--paper);
+    color:var(--ink);
+    padding:26px 26px 40px;
+    border-right:1px solid #0003;
+  }
+  .form-panel h2{
+    font-family:var(--font-display);
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    margin:0 0 4px;
+    color:var(--steel-900);
+  }
+  .form-panel .sub{
+    font-size:12px;
+    color:#7a7264;
+    margin:0 0 20px;
+    line-height:1.5;
+  }
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-family:var(--font-display);
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.8px;
+    color:#5b5548;
+    margin-bottom:6px;
+  }
+  .field label .req{color:var(--red);margin-left:3px;}
+  .field input[type=date],
+  .field input[type=number],
+  .field input[type=text],
+  .field select,
+  .field textarea{
+    width:100%;
+    background:#fff;
+    border:1.5px solid #d8d0c0;
+    border-radius:3px;
+    padding:9px 10px;
+    font-family:var(--font-body);
+    font-size:13.5px;
+    color:var(--ink);
+    outline:none;
+    transition:border-color .15s;
+  }
+  .field textarea{resize:vertical;min-height:56px;font-family:var(--font-body);}
+  .field input:focus, .field select:focus, .field textarea:focus{
+    border-color:var(--amber-dim);
+  }
+  .pill-group{display:flex;gap:8px;flex-wrap:wrap;}
+  .pill{
+    flex:1;
+    min-width:70px;
+    text-align:center;
+    padding:9px 6px;
+    border:1.5px solid #d8d0c0;
+    border-radius:3px;
+    background:#fff;
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    cursor:pointer;
+    user-select:none;
+    transition:all .12s;
+  }
+  .pill.slot{flex-basis:47%;}
+  .pill:hover{border-color:var(--amber-dim);}
+  .pill.active{
+    background:var(--steel-900);
+    border-color:var(--steel-900);
+    color:var(--amber);
+    font-weight:700;
+  }
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .divider{
+    border:none;border-top:1px dashed #d3c9b6;
+    margin:22px 0 18px;
+  }
+  .section-label{
+    font-family:var(--font-display);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+    color:var(--amber-dim);
+    margin:0 0 12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-label::after{
+    content:'';flex:1;height:1px;background:#d3c9b6;
+  }
+  .submit-btn{
+    width:100%;
+    margin-top:8px;
+    padding:13px;
+    background:var(--amber);
+    color:var(--steel-900);
+    border:none;
+    border-radius:3px;
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.6px;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background .15s, transform .1s;
+  }
+  .submit-btn:hover{background:var(--amber-dim);}
+  .submit-btn:active{transform:scale(0.99);}
+  .err-msg{
+    font-size:11.5px;color:var(--red);margin-top:6px;display:none;
+  }
+  .toast{
+    position:fixed;bottom:22px;left:22px;
+    background:var(--steel-900);color:var(--paper);
+    border-left:4px solid var(--green);
+    padding:12px 18px;border-radius:3px;
+    font-size:13px;font-family:var(--font-mono);
+    box-shadow:0 6px 18px #0006;
+    transform:translateY(140%);
+    transition:transform .3s ease;
+    z-index:50;
+  }
+  .toast.show{transform:translateY(0);}
+
+  /* DASHBOARD PANEL */
+  .dash-panel{padding:26px 30px 50px;}
+  .dash-header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:20px;flex-wrap:wrap;gap:10px;
+  }
+  .dash-header h2{
+    font-family:var(--font-display);
+    font-size:20px;margin:0;letter-spacing:0.3px;
+  }
+  .dash-header p{margin:4px 0 0;font-size:12px;color:#8b969d;}
+
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:14px;
+    margin-bottom:26px;
+  }
+  @media (max-width:700px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+  .stat-card{
+    background:var(--steel-800);
+    border:1px solid var(--steel-600);
+    border-radius:4px;
+    padding:14px 16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .stat-card::before{
+    content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+    background:var(--amber);
+  }
+  .stat-card .label{
+    font-family:var(--font-display);
+    font-size:10.5px;text-transform:uppercase;letter-spacing:1px;
+    color:#8b969d;margin-bottom:6px;
+  }
+  .stat-card .value{
+    font-family:var(--font-mono);font-size:26px;font-weight:700;
+    color:var(--paper);
+  }
+  .stat-card .value.warn{color:var(--red);}
+  .stat-card .value.good{color:var(--green);}
+  .stat-card .foot{font-size:10.5px;color:#6b7680;margin-top:4px;}
+
+  .table-wrap{
+    background:var(--steel-800);
+    border:1px solid var(--steel-600);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  thead th{
+    text-align:left;
+    font-family:var(--font-display);
+    font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;
+    color:#9aa5ac;
+    background:var(--steel-700);
+    padding:10px 12px;
+    border-bottom:1px solid var(--steel-600);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:10px 12px;
+    border-bottom:1px solid #ffffff0d;
+    font-family:var(--font-mono);
+    color:#dcd6c9;
+    white-space:nowrap;
+  }
+  tbody tr:hover{background:#ffffff08;}
+  tbody tr:last-child td{border-bottom:none;}
+  .badge{
+    display:inline-block;padding:2px 8px;border-radius:10px;
+    font-size:10.5px;font-family:var(--font-mono);font-weight:700;
+  }
+  .badge.a{background:#3c4750;color:#c8d4dc;}
+  .badge.b{background:#4a3c26;color:var(--amber);}
+  .badge.c{background:#2e4030;color:#8fbf8f;}
+  .badge.gap-ok{background:#243a26;color:#7fc47f;}
+  .badge.gap-bad{background:#402626;color:#e08282;}
+  .empty-row td{
+    text-align:center;color:#5c666d;font-family:var(--font-body);
+    padding:30px;font-style:italic;
+  }
+  .flag{color:var(--red);font-weight:700;}
+  .dash-hint{
+    margin-top:14px;font-size:11px;color:#5c666d;
+    display:flex;align-items:center;gap:6px;
+  }
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);display:inline-block;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">OPEX</div>
+    <div class="brand-text">
+      <h1>4-Hour Production Tracking</h1>
+      <p>Target vs Actual · Gap Analysis · OEE &amp; NPT Log</p>
+    </div>
+  </div>
+  <div class="clock" id="clockBox">
+    --:--:--
+    <small id="dateBox">LOADING</small>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- FORM -->
+  <div class="form-panel">
+    <h2>New Shift Entry</h2>
+    <p class="sub">Log this 4-hour slot's output. Entries appear instantly in the dashboard on the right.</p>
+
+    <div class="section-label">Shift Details</div>
+
+    <div class="two-col">
+      <div class="field">
+        <label>Date <span class="req">*</span></label>
+        <input type="date" id="f-date">
+      </div>
+      <div class="field">
+        <label>Line / Unit</label>
+        <input type="text" id="f-line" placeholder="e.g. Line 3">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Shift Name <span class="req">*</span></label>
+      <div class="pill-group" id="shiftName">
+        <div class="pill" data-val="Shift-A">Shift-A</div>
+        <div class="pill" data-val="Shift-B">Shift-B</div>
+        <div class="pill" data-val="Shift-C">Shift-C</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Shift Time (4-Hour Slot) <span class="req">*</span></label>
+      <div class="pill-group" id="shiftTime">
+        <div class="pill slot" data-val="06:00–10:00">06:00 – 10:00</div>
+        <div class="pill slot" data-val="10:00–14:00">10:00 – 14:00</div>
+        <div class="pill slot" data-val="14:00–18:00">14:00 – 18:00</div>
+        <div class="pill slot" data-val="18:00–22:00">18:00 – 22:00</div>
+        <div class="pill slot" data-val="22:00–02:00">10:00 PM – 2:00 AM</div>
+        <div class="pill slot" data-val="02:00–06:00">2:00 AM – 6:00 AM</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-label">Reported By</div>
+
+    <div class="two-col">
+      <div class="field">
+        <label>SBU <span class="req">*</span></label>
+        <select id="f-sbu">
+          <option value="" disabled selected>Select SBU</option>
+          <option value="AAFL">AAFL</option>
+          <option value="AEFML">AEFML</option>
+          <option value="ACCL">ACCL</option>
+          <option value="APFIL">APFIL</option>
+          <option value="AIL">AIL</option>
+          <option value="HRML">HRML</option>
+          <option value="FAL">FAL</option>
+          <option value="ALEL">ALEL</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Name <span class="req">*</span></label>
+        <input type="text" id="f-name" placeholder="Your name">
+      </div>
+    </div>
+    <div class="field">
+      <label>Email <span class="req">*</span></label>
+      <input type="text" id="f-email" placeholder="you@akijresource.com">
+    </div>
+
+    <hr class="divider">
+    <div class="section-label">Output</div>
+
+    <div class="two-col">
+      <div class="field">
+        <label>Target Qty (pcs)</label>
+        <input type="number" id="f-target" placeholder="0" min="0">
+      </div>
+      <div class="field">
+        <label>Actual Qty (pcs)</label>
+        <input type="number" id="f-actual" placeholder="0" min="0">
+      </div>
+    </div>
+    <div class="field">
+      <label>Gap (Target − Actual)</label>
+      <input type="text" id="f-gap" placeholder="Auto-calculated" readonly style="background:#f0ece2;color:#7a7264;cursor:not-allowed;">
+    </div>
+
+    <hr class="divider">
+    <div class="section-label">Gaps &amp; Downtime</div>
+
+    <div class="field">
+      <label>Major Breakdown</label>
+      <input type="text" id="f-breakdown" placeholder="e.g. Compressor fault — 25 min, or None">
+    </div>
+    <div class="field">
+      <label>Absent Department</label>
+      <input type="text" id="f-absent" placeholder="e.g. Sewing – 4 operators, or None">
+    </div>
+    <div class="field">
+      <label>Notes</label>
+      <textarea id="f-notes" placeholder="Any other remarks for this slot..."></textarea>
+    </div>
+
+    <div class="err-msg" id="errMsg">Please fill Date, Shift Name, Time slot, SBU, Name, and Email.</div>
+    <button class="submit-btn" id="submitBtn">Log Entry</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="dash-panel">
+    <div class="dash-header">
+      <div>
+        <h2>Today's Shift Log</h2>
+        <p id="todayLabel">Entries logged today</p>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Time Slot</th>
+            <th>Shift</th>
+            <th>Line</th>
+            <th>SBU</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Target</th>
+            <th>Actual</th>
+            <th>Gap</th>
+            <th>Breakdown</th>
+            <th>Absent Dept</th>
+          </tr>
+        </thead>
+        <tbody id="tblBody">
+          <tr class="empty-row"><td colspan="11">Loading entries...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="dash-hint"><span class="dot"></span> Entries are stored in the database and remain available between visits.</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">Entry logged successfully</div>
+
+<script>
+  const API = '/api/entries';
+
+  // clock
+  function tick(){
+    const now = new Date();
+    document.getElementById('clockBox').firstChild.textContent = now.toLocaleTimeString('en-GB');
+    document.getElementById('dateBox').textContent = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'short',day:'numeric'}).toUpperCase();
+  }
+  tick(); setInterval(tick,1000);
+
+  // pill group logic
+  function wirePillGroup(id){
+    const group = document.getElementById(id);
+    let selected = null;
+    group.querySelectorAll('.pill').forEach(p=>{
+      p.addEventListener('click',()=>{
+        group.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+        p.classList.add('active');
+        selected = p.dataset.val;
+      });
+    });
+    return { get: ()=>selected };
+  }
+  const shiftName = wirePillGroup('shiftName');
+  const shiftTime = wirePillGroup('shiftTime');
+
+  // auto-calculate gap = target - actual
+  function recalcGap(){
+    const t = document.getElementById('f-target').value;
+    const a = document.getElementById('f-actual').value;
+    const gapField = document.getElementById('f-gap');
+    if(t === '' || a === ''){
+      gapField.value = '';
+      return;
+    }
+    const gap = Number(t) - Number(a);
+    gapField.value = gap;
+  }
+  document.getElementById('f-target').addEventListener('input', recalcGap);
+  document.getElementById('f-actual').addEventListener('input', recalcGap);
+
+  // default date = today
+  document.getElementById('f-date').valueAsDate = new Date();
+
+  let entries = [];
+
+  function fmtDate(d){
+    const dt = new Date(d+'T00:00:00');
+    return dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+  }
+
+  function badgeForShift(s){
+    if(s==='Shift-A') return 'a';
+    if(s==='Shift-B') return 'b';
+    return 'c';
+  }
+
+  function todayStr(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function render(){
+    const tbody = document.getElementById('tblBody');
+    const today = todayStr();
+    const todays = entries.filter(e=>e.entry_date===today);
+
+    document.getElementById('todayLabel').textContent =
+      todays.length + ' entr' + (todays.length===1?'y':'ies') + ' logged today';
+
+    if(todays.length===0){
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="11">No entries logged today yet — submit the form to see it here.</td></tr>';
+    } else {
+      tbody.innerHTML = todays.slice().reverse().map(e=>{
+        const breakdown = e.major_breakdown && e.major_breakdown.trim() && e.major_breakdown.trim().toLowerCase()!=='none'
+          ? '<span class="flag">'+escapeHtml(e.major_breakdown)+'</span>' : '—';
+        const absent = e.absent_department && e.absent_department.trim() && e.absent_department.trim().toLowerCase()!=='none'
+          ? '<span class="flag">'+escapeHtml(e.absent_department)+'</span>' : '—';
+        const hasTA = e.target_qty !== '' && e.actual_qty !== '' && e.target_qty != null && e.actual_qty != null;
+        const gapVal = hasTA ? (Number(e.target_qty) - Number(e.actual_qty)) : null;
+        const gapBadge = gapVal===null ? '' : (gapVal<=0 ? 'gap-ok' : 'gap-bad');
+        const gapStr = gapVal===null ? '—' : ('<span class="badge '+gapBadge+'">'+gapVal+'</span>');
+        return `<tr>
+          <td>${e.time_slot}</td>
+          <td><span class="badge ${badgeForShift(e.shift_name)}">${e.shift_name}</span></td>
+          <td>${e.line || '—'}</td>
+          <td>${escapeHtml(e.sbu) || '—'}</td>
+          <td>${escapeHtml(e.name) || '—'}</td>
+          <td>${escapeHtml(e.email) || '—'}</td>
+          <td>${e.target_qty !== '' ? e.target_qty : '—'}</td>
+          <td>${e.actual_qty !== '' ? e.actual_qty : '—'}</td>
+          <td>${gapStr}</td>
+          <td>${breakdown}</td>
+          <td>${absent}</td>
+        </tr>`;
+      }).join('');
+    }
+  }
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2600);
+  }
+
+  async function loadEntries(){
+    try{
+      const res = await fetch(API+'?date='+todayStr());
+      if(!res.ok) throw new Error(res.status);
+      entries = await res.json();
+      render();
+    }catch(e){
+      entries = [];
+      render();
+      console.error('load failed', e);
+    }
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', async ()=>{
+    const date = document.getElementById('f-date').value;
+    const sName = shiftName.get();
+    const sTime = shiftTime.get();
+    const sbu = document.getElementById('f-sbu').value.trim();
+    const name = document.getElementById('f-name').value.trim();
+    const email = document.getElementById('f-email').value.trim();
+    const errBox = document.getElementById('errMsg');
+
+    if(!date || !sName || !sTime || !sbu || !name || !email){
+      errBox.style.display = 'block';
+      return;
+    }
+    errBox.style.display = 'none';
+
+    const payload = {
+      entry_date: date,
+      shift_name: sName,
+      time_slot: sTime,
+      line: document.getElementById('f-line').value.trim(),
+      sbu, name, email,
+      target: document.getElementById('f-target').value,
+      actual: document.getElementById('f-actual').value,
+      gap: document.getElementById('f-gap').value,
+      major_breakdown: document.getElementById('f-breakdown').value.trim(),
+      absent_department: document.getElementById('f-absent').value.trim(),
+      notes: document.getElementById('f-notes').value.trim()
+    };
+
+    try{
+      const res = await fetch(API, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok){
+        throw new Error('server returned '+res.status);
+      }
+    }catch(e){
+      showToast('Failed to save — check server/database');
+      console.error(e);
+      return;
+    }
+
+    // reset relevant fields, keep date
+    document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+    document.getElementById('f-line').value='';
+    document.getElementById('f-sbu').value='';
+    document.getElementById('f-name').value='';
+    document.getElementById('f-email').value='';
+    document.getElementById('f-target').value='';
+    document.getElementById('f-actual').value='';
+    document.getElementById('f-gap').value='';
+    document.getElementById('f-breakdown').value='';
+    document.getElementById('f-absent').value='';
+    document.getElementById('f-notes').value='';
+
+    await loadEntries();
+    showToast('Entry logged — ' + sName + ' · ' + sTime);
+  });
+
+  // load existing entries on start
+  loadEntries();
+</script>
+
+</body>
+</html>

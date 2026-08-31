@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Ops Memo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#eae4d6;
+    --paper-2:#e1d9c8;
+    --ink:#232323;
+    --ink-soft:#54524a;
+    --line:#b8ae98;
+    --stamp:#a4342a;
+    --stamp-ink:#7f2b23;
+    --mustard:#b9862f;
+    --carbon:#dcd3c1;
+    --font-type:'Special Elite',cursive;
+    --font-mono:'Courier Prime',monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:#3b352c;
+    background-image:radial-gradient(circle at 50% 0%, #4a4235, #2c2720 80%);
+    padding:32px 14px 70px;
+    font-family:var(--font-mono);
+    color:var(--ink);
+  }
+  .sheet-stack{max-width:760px;margin:0 auto;position:relative;}
+  .sheet-stack::before, .sheet-stack::after{
+    content:'';position:absolute;inset:0;
+    background:var(--carbon);border:1px solid #00000022;
+    z-index:0;
+  }
+  .sheet-stack::before{transform:rotate(-1.1deg) translate(6px,10px);}
+  .sheet-stack::after{transform:rotate(0.9deg) translate(-5px,7px);}
+  .sheet{
+    position:relative;z-index:1;
+    background:var(--paper);
+    border:1px solid var(--line);
+    box-shadow:0 22px 40px rgba(0,0,0,0.35);
+    padding:34px 30px 26px;
+    background-image:
+      linear-gradient(var(--paper), var(--paper)),
+      repeating-linear-gradient(transparent 0 27px, rgba(0,0,0,0.025) 27px 28px);
+  }
+
+  .memo-top{
+    display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:3px double var(--ink);padding-bottom:10px;margin-bottom:16px;
+  }
+  .memo-title{font-family:var(--font-type);font-size:22px;letter-spacing:.04em;}
+  .memo-tag{
+    font-size:10.5px;color:var(--ink-soft);text-align:right;line-height:1.6;
+    font-family:var(--font-mono);
+  }
+  .field-block{margin-bottom:5px;font-size:13px;}
+  .field-block b{font-family:var(--font-type);font-weight:400;}
+  .memo-fields{border-bottom:1px dashed var(--line);padding-bottom:14px;margin-bottom:18px;}
+  .memo-fields .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:6px;}
+  .memo-fields label{font-family:var(--font-type);font-size:12px;min-width:78px;color:var(--ink-soft);}
+  .to-locked{
+    font-family:var(--font-mono);font-size:13px;background:var(--paper-2);
+    border:1px dashed var(--line);border-radius:2px;padding:5px 9px;color:var(--ink);
+  }
+  select,input[type=date],input[type=email],input[type=text]{
+    background:transparent;border:none;border-bottom:1px solid var(--ink-soft);
+    color:var(--ink);font-family:var(--font-mono);font-size:13px;padding:4px 2px;
+    outline:none;flex:1;min-width:140px;
+  }
+  select:focus,input:focus,textarea:focus{border-bottom-color:var(--stamp);}
+
+  /* section list */
+  .item{
+    display:grid;grid-template-columns:34px 1fr;gap:10px;
+    padding:10px 0;border-bottom:1px dashed var(--line);
+  }
+  .item-num{
+    font-family:var(--font-type);font-size:15px;color:var(--mustard);padding-top:2px;
+  }
+  .item-title-row{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
+  .item-title{font-family:var(--font-type);font-size:14px;}
+  .item-sub{font-size:10.5px;color:var(--ink-soft);font-style:italic;}
+  .chip-row{display:flex;gap:6px;margin-bottom:6px;}
+  .chip{
+    font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;
+    padding:2px 8px;border:1px solid var(--ink-soft);border-radius:2px;background:transparent;
+    color:var(--ink-soft);cursor:pointer;
+  }
+  .chip.on-done{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+  .chip.on-na{background:var(--paper-2);color:var(--ink-soft);border-style:dashed;}
+  textarea{
+    width:100%;min-height:38px;background:transparent;border:none;
+    color:var(--ink);font-family:var(--font-mono);font-size:13px;resize:vertical;
+    outline:none;line-height:1.55;
+    border-bottom:1px solid transparent;
+  }
+  textarea:focus{border-bottom:1px solid var(--stamp);}
+  textarea::placeholder{color:#00000055;font-style:italic;}
+
+  /* sign-off + send */
+  .signoff{margin-top:18px;padding-top:14px;border-top:3px double var(--ink);}
+  .signoff-grid{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;}
+  .from-field label{display:block;font-family:var(--font-type);font-size:12px;color:var(--ink-soft);margin-bottom:3px;}
+  .from-field input{border-bottom:1px solid var(--ink);min-width:220px;font-size:13px;}
+
+  .stamp-btn{
+    position:relative;
+    font-family:var(--font-type);font-size:16px;letter-spacing:.08em;
+    color:var(--stamp);background:transparent;
+    border:3px solid var(--stamp);border-radius:6px;
+    padding:12px 22px;cursor:pointer;transform:rotate(-3deg);
+    text-transform:uppercase;
+    transition:transform .12s;
+  }
+  .stamp-btn:hover{transform:rotate(-1deg) scale(1.03);}
+  .stamp-btn:active{transform:rotate(0deg) scale(0.97);}
+  .stamp-btn.sent{
+    color:var(--ok,#3f6b45);border-color:#3f6b45;
+  }
+
+  .secondary-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .link-btn{
+    background:none;border:none;font-family:var(--font-mono);font-size:12px;
+    text-decoration:underline;color:var(--ink-soft);cursor:pointer;padding:0;
+  }
+  .link-btn:hover{color:var(--ink);}
+
+  .save-note{margin-top:12px;font-size:10.5px;color:var(--ink-soft);text-align:right;font-style:italic;}
+  .save-note.ok{color:#3f6b45;}
+
+  .autosend-panel{
+    margin-top:14px;padding:12px 14px;border:1px dashed var(--line);
+    background:var(--paper-2);border-radius:4px;
+  }
+  .autosend-panel input{
+    border-bottom:1px solid var(--ink-soft);background:transparent;
+    font-family:var(--font-mono);font-size:12.5px;padding:4px;
+  }
+
+  .ai-btn{color:var(--mustard) !important;font-weight:700;}
+  .ai-btn:disabled{opacity:0.55;cursor:wait;}
+  .ai-status{
+    font-family:var(--font-mono);font-size:11px;color:var(--mustard);margin-top:6px;
+    min-height:14px;
+  }
+  .ai-status.ready{color:#3f6b45;}
+
+  .perforation{
+    text-align:center;color:var(--line);font-size:10px;letter-spacing:2px;margin:6px 0 -2px;
+  }
+
+  .extra-block{padding:12px 0 6px;}
+  .extra-title{
+    font-family:var(--font-type);font-size:13.5px;margin-bottom:8px;
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;
+  }
+  .extra-sub{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-soft);font-style:italic;font-weight:normal;}
+
+  .score-row{
+    display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;
+  }
+  .score-row label{font-family:var(--font-type);font-size:11.5px;color:var(--ink-soft);}
+  .score-row input, .score-row select{
+    border:none;border-bottom:1px solid var(--ink-soft);background:transparent;
+    font-family:var(--font-mono);font-size:13px;padding:2px 4px;
+  }
+  .score-row input[type=number]{width:70px;text-align:center;}
+  .score-row input[type=text]{flex:1;min-width:160px;}
+  .score-row select{min-width:120px;}
+</style>
+</head>
+<body>
+<div class="sheet-stack">
+  <div class="sheet">
+
+    <div class="memo-top">
+      <div>
+        <div class="memo-title">OPEX DAILY WORK UPDATE</div>
+      </div>
+      <div class="memo-tag">FORM DOR-08<br>DAILY WORK UPDATE REPORT</div>
+    </div>
+
+    <div class="memo-fields">
+      <div class="row">
+        <label>To:</label>
+        <span class="to-locked" id="toLocked">deputy.coo@akijresource.com</span>
+      </div>
+      <div class="row">
+        <label>SBU:</label>
+        <select id="factory">
+          <option>ACCL</option><option>APFIL</option><option>AIL</option>
+          <option>AAFL</option><option>AEFML</option><option>AEDML</option>
+          <option>FAL</option><option>HRML</option><option>ALEL</option>
+        </select>
+        <label style="min-width:auto;">Date:</label>
+        <input type="date" id="reportDate">
+      </div>
+    </div>
+
+    <div id="sections"></div>
+
+    <div class="perforation">✂ — — — — — — — — — — — — — — — — — — — — — — — — — — — —</div>
+
+    <div class="extra-block">
+      <div class="extra-title">PROBLEM / REASON <span class="extra-sub">why any task above could not be completed</span></div>
+      <textarea id="problemText" placeholder="e.g. Floor visit incomplete — line 3 was under changeover all shift..." style="min-height:52px;"></textarea>
+    </div>
+
+    <div class="signoff">
+      <div class="signoff-grid">
+        <div class="from-field">
+          <label>From (name):</label>
+          <input type="text" id="fromLine" placeholder="e.g. Rahim Uddin">
+        </div>
+        <button class="stamp-btn" id="sendBtn" onclick="sendMail()">✉ Send Mail</button>
+      </div>
+      <div class="secondary-row">
+        <button class="link-btn" onclick="copyMail()">Copy as text</button>
+        <button class="link-btn ai-btn" id="aiBtn" onclick="openChatGPTForCorrection()">✦ Correct with ChatGPT</button>
+      </div>
+      <div class="ai-status" id="aiStatus"></div>
+      <div class="save-note" id="saveNote">— auto-saved on this device — mail opens in Gmail under your own logged-in account —</div>
+
+      <div id="chatgptPasteArea" class="autosend-panel" style="display:none;">
+        <div class="extra-title" style="margin-bottom:8px;">PASTE CHATGPT'S CORRECTED REPLY</div>
+        <div class="extra-sub" style="margin-bottom:8px;">
+          ChatGPT opened in a new tab with your draft (and it's also copied to your clipboard as backup —
+          paste it in if the tab opened empty). Once ChatGPT replies, copy its corrected text and paste it below.
+        </div>
+        <textarea id="chatgptResult" placeholder="Paste ChatGPT's corrected memo here..." style="min-height:120px;width:100%;"></textarea>
+        <div class="score-row" style="margin-top:8px;">
+          <button type="button" class="link-btn" onclick="useChatGPTResult()"><b>✔ Use this &amp; open Gmail</b></button>
+          <button type="button" class="link-btn" onclick="closeChatGPTPasteArea()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* Local storage shim — auto-save keeps everything on this device (no DB). */
+window.storage = {
+  async set(key, value, _async){
+    try{ localStorage.setItem(key, value); return { success:true }; }
+    catch(e){ throw e; }
+  },
+  async get(key, _async){
+    try{
+      const value = localStorage.getItem(key);
+      return value === null ? null : { value };
+    }catch(e){ throw e; }
+  }
+};
+
+const TO_EMAIL = 'deputy.coo@akijresource.com';
+
+const SECTIONS = [
+  {key:'audit', title:'Audit', sub:'QCP, 5S',
+    placeholder:'QCP status, 5S observations...'},
+  {key:'meeting', title:'Meeting', sub:'Morning Meeting / 4H-Tracking Meeting / Operation Meeting',
+    placeholder:'Key points / decisions from the meeting...',
+    extra:[{key:'meetingName', label:'Meeting name:', type:'text', placeholder:'e.g. Morning Meeting'}]},
+  {key:'training', title:'Training', sub:'If any',
+    placeholder:'Attendees, trainer, outcome...',
+    extra:[
+      {key:'trainingName', label:'Training name:', type:'text', placeholder:'e.g. Machine Safety Training'},
+      {key:'trainingDuration', label:'Training duration (min):', type:'number', placeholder:'e.g. 45'}
+    ]},
+  {key:'project', title:'Project Work', sub:'If any task done',
+    placeholder:'What was done on the project today...',
+    extra:[
+      {key:'projectName', label:'Project name:', type:'text', placeholder:'e.g. Line 3 Setup Reduction'},
+      {key:'progress', label:'Progress %:', type:'number', placeholder:'0-100'}
+    ]},
+  {key:'stdindex', title:'Standardization Index', sub:'If any task done',
+    placeholder:'Work done on standardization index...',
+    extra:[
+      {key:'projectName', label:'Project name:', type:'text', placeholder:'e.g. SOP Update - Line 2'}
+    ]},
+  {key:'moh', title:'MOH', sub:'OT, CPL control work', placeholder:'OT hours, CPL control actions...'},
+  {key:'manpower', title:'Manpower', sub:'If any work on it', placeholder:'Manpower planning / issues...'},
+  {key:'analysis', title:'Analysis', sub:'If any analysis done with result', placeholder:'What was analyzed and the result...'},
+  {key:'floor', title:'Floor Visit', sub:'Observation or scope of work', placeholder:'Observations, scope of improvement...'},
+  {key:'adhoc', title:'Adhoc Work', sub:'Task assigned by management',
+    placeholder:'Details of the assigned task...',
+    extra:[
+      {key:'taskName', label:'Task name:', type:'text', placeholder:'e.g. Prepare audit checklist'}
+    ]},
+  {key:'report', title:'Report Work', sub:'OEE check and findings', placeholder:'OEE figure, findings, remarks...'},
+  {key:'icpc', title:'ICPC Meeting', sub:'Improvement Card / Problem Solving Meeting',
+    placeholder:'Key points / decisions from the ICPC meeting...',
+    extra:[
+      {key:'icpcName', label:'ICPC name:', type:'text', placeholder:'e.g. Line 2 ICPC Review'}
+    ]},
+];
+
+function emptyItemState(){
+  return {status:null, text:'', extraRows:[{}]};
+}
+
+const sectionsEl = document.getElementById('sections');
+let state = {};
+let problemText = '';
+let finalMailBody = null;  // set once user accepts an AI-polished or edited version
+
+function invalidateFinalMailBody(){
+  if(finalMailBody !== null){
+    finalMailBody = null;
+    const status = document.getElementById('aiStatus');
+    if(status){ status.textContent = ''; status.classList.remove('ready'); }
+  }
+}
+
+function todayKey(){
+  const f = document.getElementById('factory').value;
+  const d = document.getElementById('reportDate').value;
+  return `memo:${f}:${d}`;
+}
+
+function render(){
+  sectionsEl.innerHTML = '';
+  SECTIONS.forEach((s,i)=>{
+    const st = state[s.key] || emptyItemState();
+    st.extraRows = (st.extraRows && st.extraRows.length) ? st.extraRows : [{}];
+    const div = document.createElement('div');
+    div.className = 'item';
+
+    let extraFields = '';
+    if(s.extra && s.extra.length){
+      const rowsHtml = st.extraRows.map((row, r)=>{
+        const fieldsHtml = s.extra.map(f=>{
+          const val = row[f.key] ?? '';
+          if(f.type === 'select'){
+            const placeholderOpt = `<option value="" ${val===''?'selected':''} disabled hidden>Select...</option>`;
+            const opts = f.options.map(o=>`<option ${o===val?'selected':''}>${o}</option>`).join('');
+            return `<select data-key="${s.key}" data-field="${f.key}" data-row="${r}" class="extra-input">${placeholderOpt}${opts}</select>`;
+          }
+          return `<input type="${f.type}" data-key="${s.key}" data-field="${f.key}" data-row="${r}" class="extra-input" placeholder="${f.placeholder||''}" value="${val}">`;
+        }).join('');
+        const removeBtn = st.extraRows.length > 1
+          ? `<button type="button" class="link-btn" data-key="${s.key}" data-row="${r}" onclick="removeExtraRow(this)" style="flex:0;">✕</button>`
+          : '';
+        return `<div class="score-row" data-row-group="${r}">${fieldsHtml}${removeBtn}</div>`;
+      }).join('');
+      extraFields = `${rowsHtml}<button type="button" class="link-btn" data-key="${s.key}" onclick="addExtraRow(this)">+ Add another</button>`;
+    }
+
+    div.innerHTML = `
+      <div class="item-num">${String(i+1).padStart(2,'0')}</div>
+      <div>
+        <div class="item-title-row">
+          <span class="item-title">${s.title}</span>
+          <span class="item-sub">${s.sub}</span>
+        </div>
+        <div class="chip-row">
+          <button type="button" class="chip ${st.status==='done'?'on-done':''}" data-key="${s.key}" data-val="done">Done</button>
+          <button type="button" class="chip ${st.status==='na'?'on-na':''}" data-key="${s.key}" data-val="na">N/A</button>
+        </div>
+        ${extraFields}
+        <textarea data-key="${s.key}" placeholder="${s.placeholder}">${st.text}</textarea>
+      </div>
+    `;
+    sectionsEl.appendChild(div);
+  });
+
+  sectionsEl.querySelectorAll('.chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const k = btn.dataset.key, v = btn.dataset.val;
+      state[k] = state[k] || emptyItemState();
+      state[k].status = state[k].status === v ? null : v;
+      invalidateFinalMailBody();
+      persist(); render();
+    });
+  });
+  sectionsEl.querySelectorAll('textarea').forEach(ta=>{
+    ta.addEventListener('input', ()=>{
+      const k = ta.dataset.key;
+      state[k] = state[k] || emptyItemState();
+      state[k].text = ta.value;
+      persistDebounced();
+    });
+  });
+  sectionsEl.querySelectorAll('.extra-input').forEach(inp=>{
+    const update = ()=>{
+      const k = inp.dataset.key, f = inp.dataset.field, r = parseInt(inp.dataset.row, 10);
+      state[k] = state[k] || emptyItemState();
+      state[k].extraRows = state[k].extraRows || [{}];
+      state[k].extraRows[r] = state[k].extraRows[r] || {};
+      state[k].extraRows[r][f] = inp.value;
+      persistDebounced();
+    };
+    inp.addEventListener('input', update);
+    inp.addEventListener('change', update);
+  });
+}
+
+function addExtraRow(btn){
+  const k = btn.dataset.key;
+  state[k] = state[k] || emptyItemState();
+  state[k].extraRows = state[k].extraRows || [{}];
+  state[k].extraRows.push({});
+  invalidateFinalMailBody();
+  persist(); render();
+}
+
+function removeExtraRow(btn){
+  const k = btn.dataset.key, r = parseInt(btn.dataset.row, 10);
+  state[k] = state[k] || emptyItemState();
+  if(state[k].extraRows && state[k].extraRows.length > 1){
+    state[k].extraRows.splice(r, 1);
+  }
+  invalidateFinalMailBody();
+  persist(); render();
+}
+
+let saveTimer;
+function persistDebounced(){
+  invalidateFinalMailBody();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(persist, 500);
+}
+
+async function persist(){
+  try{
+    const payload = { state, problemText };
+    await window.storage.set(todayKey(), JSON.stringify(payload), false);
+    const note = document.getElementById('saveNote');
+    note.textContent = '— saved ' + new Date().toLocaleTimeString() + ' —';
+    note.classList.add('ok');
+  }catch(e){ console.error('save failed', e); }
+}
+
+async function loadForDate(){
+  invalidateFinalMailBody();
+  try{
+    const res = await window.storage.get(todayKey(), false);
+    const payload = res ? JSON.parse(res.value) : {};
+    state = payload.state || {};
+    problemText = payload.problemText || '';
+  }catch(e){
+    state = {}; problemText = '';
+  }
+  render();
+  document.getElementById('problemText').value = problemText;
+}
+
+function buildReportText(){
+  const factory = document.getElementById('factory').value;
+  const date = document.getElementById('reportDate').value || new Date().toISOString().slice(0,10);
+  const from = document.getElementById('fromLine').value || '[Your Name]';
+
+  let lines = [];
+  lines.push(`OPEX DAILY WORK UPDATE — DAILY WORK UPDATE REPORT`);
+  lines.push(`SBU: ${factory}`);
+  lines.push(`Date: ${date}`);
+  lines.push(``);
+  SECTIONS.forEach((s,i)=>{
+    const st = state[s.key] || emptyItemState();
+    st.extraRows = (st.extraRows && st.extraRows.length) ? st.extraRows : [{}];
+    let statusLabel = st.status === 'done' ? '[Done]' : st.status === 'na' ? '[N/A today]' : '';
+    let body = st.text.trim() || (st.status ? '-' : 'No update.');
+    lines.push(`${i+1}. ${s.title} (${s.sub}) ${statusLabel}`);
+    if(s.extra && s.extra.length){
+      const filledRows = st.extraRows.filter(row => s.extra.some(f => (row[f.key] || '').toString().trim() !== ''));
+      const rowsToShow = filledRows.length ? filledRows : st.extraRows.slice(0,1);
+      rowsToShow.forEach((row, r)=>{
+        const prefix = rowsToShow.length > 1 ? `   Entry ${r+1}:` : '  ';
+        lines.push(prefix);
+        s.extra.forEach(f=>{
+          const v = row[f.key];
+          lines.push(`   ${f.label} ${v !== undefined && v !== '' ? v : '-'}`);
+        });
+      });
+    }
+    lines.push(`   ${body}`);
+    lines.push(``);
+  });
+
+  // Problem / reason
+  lines.push(`PROBLEM / REASON (if any task not done)`);
+  lines.push(`   ${problemText.trim() || 'None.'}`);
+  lines.push(``);
+
+  lines.push(`Regards,`);
+  lines.push(from);
+  return lines.join('\n');
+}
+
+function openChatGPTForCorrection(){
+  const status = document.getElementById('aiStatus');
+  const draft = buildReportText();
+
+  const prompt = 'Please correct the spelling and grammar of this daily operations memo and rewrite it in formal, professional English for a manager. Keep all facts, numbers, scores, names, and structure EXACTLY the same — do not add or remove any information, just correct the language:\n\n' + draft;
+
+  // Best effort: opens ChatGPT with the draft pre-filled in the message box.
+  // Also copied to clipboard as a reliable backup in case the pre-fill
+  // doesn't work in your browser — just paste (Ctrl/Cmd+V) and send.
+  window.open('https://chatgpt.com/?q=' + encodeURIComponent(prompt), '_blank');
+
+  navigator.clipboard.writeText(prompt).catch(()=>{ /* clipboard may be unavailable, pre-fill is the primary path */ });
+
+  document.getElementById('chatgptPasteArea').style.display = 'block';
+  document.getElementById('chatgptResult').value = '';
+  document.getElementById('chatgptResult').focus();
+  status.textContent = 'ChatGPT opened in a new tab (draft copied too, just in case). Once it replies, copy the corrected text and paste it below.';
+}
+
+function closeChatGPTPasteArea(){
+  document.getElementById('chatgptPasteArea').style.display = 'none';
+  document.getElementById('aiStatus').textContent = '';
+}
+
+function useChatGPTResult(){
+  const text = document.getElementById('chatgptResult').value.trim();
+  const status = document.getElementById('aiStatus');
+  if(!text){
+    status.textContent = '⚠ Paste ChatGPT\'s corrected reply into the box first.';
+    return;
+  }
+  finalMailBody = text;
+  document.getElementById('chatgptPasteArea').style.display = 'none';
+  status.textContent = '✓ Using ChatGPT\'s corrected version — opening Gmail now.';
+  openMailFallback();
+}
+
+async function loadFromDefault(){
+  try{
+    const res = await window.storage.get('from-default', false);
+    const input = document.getElementById('fromLine');
+    if(res && res.value && !input.value.trim()){
+      input.value = res.value;
+    }
+  }catch(e){ /* nothing saved yet */ }
+}
+
+function buildMailSubjectBody(){
+  const factory = document.getElementById('factory').value;
+  const date = document.getElementById('reportDate').value || new Date().toISOString().slice(0,10);
+  const subject = `Daily Work Update Report - ${factory} - ${date}`;
+  const body = finalMailBody || buildReportText();
+  return {subject, body};
+}
+
+function sendMail(){
+  // Always opens Gmail's web compose window under WHICHEVER Google account
+  // is logged into this browser — so every teammate sends from their own
+  // address. Nothing here routes mail through a shared account.
+  openMailFallback();
+
+  const btn = document.getElementById('sendBtn');
+  btn.textContent = '✔ Opened in Gmail';
+  btn.classList.add('sent');
+  setTimeout(()=>{ btn.textContent = '✉ Send Mail'; btn.classList.remove('sent'); }, 3000);
+}
+
+function openMailFallback(){
+  const {subject, body} = buildMailSubjectBody();
+  const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(TO_EMAIL)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.open(url, '_blank');
+}
+
+async function copyMail(){
+  const text = finalMailBody || buildReportText();
+  try{
+    await navigator.clipboard.writeText(text);
+    alert('Memo text copied. Paste into your email client if the buttons above did not open one.');
+  }catch(e){
+    alert('Could not copy automatically — select and copy from the preview.');
+  }
+}
+
+document.getElementById('problemText').addEventListener('input', (e)=>{
+  problemText = e.target.value;
+  persistDebounced();
+});
+
+document.getElementById('fromLine').addEventListener('change', (e)=>{
+  window.storage.set('from-default', e.target.value.trim(), false).catch(()=>{});
+});
+
+document.getElementById('factory').addEventListener('change', loadForDate);
+document.getElementById('reportDate').addEventListener('change', loadForDate);
+
+document.getElementById('reportDate').value = new Date().toISOString().slice(0,10);
+loadFromDefault();
+loadForDate();
+</script>
+</body>
+</html>

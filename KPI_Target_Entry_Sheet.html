@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SBU KPI Monthly Target Entry Sheet</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; background:#f4f6f8; margin:0; padding:30px; }
+  .card { max-width:720px; margin:0 auto; background:#fff; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.08); padding:30px 36px; }
+  h1 { font-size:20px; color:#1f2937; margin-bottom:4px; }
+  p.sub { color:#6b7280; font-size:13px; margin-top:0; margin-bottom:24px; }
+  label { display:block; font-size:13px; font-weight:600; color:#374151; margin-bottom:6px; margin-top:16px; }
+  select, input { width:100%; box-sizing:border-box; padding:9px 10px; font-size:14px; border:1px solid #d1d5db; border-radius:6px; background:#fff; }
+  select:focus, input:focus { outline:none; border-color:#2563eb; box-shadow:0 0 0 2px rgba(37,99,235,0.15); }
+  .row { display:flex; gap:16px; }
+  .row > div { flex:1; }
+  input[readonly] { background:#f3f4f6; color:#374151; }
+  button { margin-top:26px; width:100%; padding:11px; font-size:14px; font-weight:600; color:#fff; background:#2563eb; border:none; border-radius:6px; cursor:pointer; }
+  button:hover { background:#1d4ed8; }
+  table { width:100%; border-collapse:collapse; margin-top:28px; font-size:13px; }
+  th, td { border:1px solid #e5e7eb; padding:7px 8px; text-align:left; }
+  th { background:#f3f4f6; color:#374151; }
+  .empty { color:#9ca3af; text-align:center; padding:14px; }
+  .actions { display:flex; gap:10px; margin-top:10px; }
+  .actions button { background:#6b7280; }
+  .actions button:hover { background:#4b5563; }
+  #downloadBtn { background:#059669; }
+  #downloadBtn:hover { background:#047857; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>SBU KPI Monthly Target Entry Sheet</h1>
+  <p class="sub">Select SBU, KPI, and Month. Label and unit fill in automatically — enter the target manually.</p>
+
+  <div class="row">
+    <div>
+      <label for="sbu">SBU</label>
+      <select id="sbu">
+        <option value="">-- Select SBU --</option>
+      </select>
+    </div>
+    <div>
+      <label for="kpiId">KPI ID</label>
+      <select id="kpiId">
+        <option value="">-- Select KPI --</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label for="kpiLabel">KPI Label (auto)</label>
+      <input type="text" id="kpiLabel" readonly>
+    </div>
+    <div>
+      <label for="unit">Unit (auto)</label>
+      <input type="text" id="unit" readonly>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label for="month">Month</label>
+      <select id="month">
+        <option value="">-- Select Month --</option>
+      </select>
+    </div>
+    <div>
+      <label for="target">Monthly Target (manual)</label>
+      <input type="text" id="target" placeholder="e.g. 159,000">
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="addBtn" style="background:#2563eb;">Add Entry</button>
+  </div>
+
+  <div style="margin-top:28px;">
+    <span style="font-size:14px; font-weight:600; color:#374151;">Entries</span>
+  </div>
+  <table id="entryTable">
+    <thead>
+      <tr><th>SBU</th><th>KPI ID</th><th>KPI Label</th><th>Unit</th><th>Month</th><th>Monthly Target</th><th colspan="2"></th></tr>
+    </thead>
+    <tbody id="entryBody">
+      <tr id="emptyRow"><td colspan="8" class="empty">No entries yet</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+/* ============================================================
+   FLASK API CONNECTION  -  kpi_target (PostgreSQL)
+   Replaces the original Supabase REST layer.
+   ============================================================ */
+const API = "http://127.0.0.1:5002/api/entries";
+
+const sbuList = ["ACCL","AIL","AEFML","M.OIL","HRML","FAL","APFIL","ALEL","AAFL"];
+
+const kpiMap = {
+  "prod_budget":     { label: "Production Budget", unit: "BDT" },
+  "cap_util":        { label: "Capacity Utilization", unit: "%" },
+  "oee":             { label: "OEE", unit: "%" },
+  "manpower":        { label: "Manpower", unit: "hd" },
+  "ot":              { label: "OT", unit: "HR" },
+  "kaizen":          { label: "Kaizen", unit: "no." },
+  "qcp_audit":       { label: "QCP Audit", unit: "no." },
+  "5s_score":        { label: "5S Score", unit: "%" },
+  "training":        { label: "Training", unit: "no." },
+  "project":         { label: "Project", unit: "no." },
+  "kaizen_savings":  { label: "Kaizen Savings", unit: "BDT" },
+  "OT cost":         { label: "OT Amount", unit: "BDT" }
+};
+
+const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+const sbuSel = document.getElementById('sbu');
+const kpiSel = document.getElementById('kpiId');
+const labelInput = document.getElementById('kpiLabel');
+const unitInput = document.getElementById('unit');
+const monthSel = document.getElementById('month');
+const targetInput = document.getElementById('target');
+const tbody = document.getElementById('entryBody');
+const emptyRow = document.getElementById('emptyRow');
+
+sbuList.forEach(s => {
+  const o = document.createElement('option');
+  o.value = s; o.textContent = s;
+  sbuSel.appendChild(o);
+});
+
+Object.keys(kpiMap).forEach(k => {
+  const o = document.createElement('option');
+  o.value = k; o.textContent = k;
+  kpiSel.appendChild(o);
+});
+
+months.forEach(m => {
+  const o = document.createElement('option');
+  o.value = m; o.textContent = m;
+  monthSel.appendChild(o);
+});
+
+kpiSel.addEventListener('change', () => {
+  const data = kpiMap[kpiSel.value];
+  if (data) {
+    labelInput.value = data.label;
+    unitInput.value = data.unit;
+  } else {
+    labelInput.value = '';
+    unitInput.value = '';
+  }
+});
+
+let entries = [];
+const addBtn = document.getElementById('addBtn');
+
+async function loadEntries() {
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error('Load failed (' + res.status + '): ' + (await res.text()));
+    const data = await res.json();
+    entries = data.map(r => ({
+      dbId: r.id,
+      sbu: r.sbu,
+      kpiId: r.kpi_id,
+      kpiLabel: r.kpi_label,
+      unit: r.unit,
+      month: r.month,
+      target: r.monthly_target
+    }));
+  } catch (err) {
+    console.error('load error', err);
+    entries = [];
+  }
+  renderTable();
+}
+
+addBtn.addEventListener('click', async () => {
+  if (!sbuSel.value || !kpiSel.value || !monthSel.value || !targetInput.value.trim()) {
+    alert('Please fill in SBU, KPI ID, Month, and Monthly Target.');
+    return;
+  }
+  addBtn.disabled = true;
+  addBtn.textContent = 'Saving...';
+
+  try {
+    const res = await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sbu: sbuSel.value,
+        kpi_id: kpiSel.value,
+        kpi_label: labelInput.value,
+        unit: unitInput.value,
+        month: monthSel.value,
+        monthly_target: targetInput.value.trim()
+      })
+    });
+    if (!res.ok) throw new Error('Save failed (' + res.status + '): ' + (await res.text()));
+  } catch (err) {
+    alert('Error saving: ' + err.message);
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add Entry';
+    return;
+  }
+
+  addBtn.disabled = false;
+  addBtn.textContent = 'Add Entry';
+
+  await loadEntries();
+
+  kpiSel.value = '';
+  labelInput.value = '';
+  unitInput.value = '';
+  targetInput.value = '';
+});
+
+loadEntries();
+
+function renderTable() {
+  tbody.innerHTML = '';
+  if (entries.length === 0) {
+    tbody.appendChild(emptyRow);
+    return;
+  }
+  entries.forEach((e, i) => {
+    if (e.hidden) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${e.sbu}</td><td>${e.kpiId}</td><td>${e.kpiLabel}</td><td>${e.unit}</td><td>${e.month}</td><td>${e.target}</td>
+      <td><button data-i="${i}" class="hideRowBtn" style="background:#6b7280;padding:4px 8px;font-size:12px;margin:0;width:auto;">Hide</button></td>
+      <td><button data-i="${i}" class="deleteRowBtn" style="background:#dc2626;padding:4px 8px;font-size:12px;margin:0;width:auto;">Delete</button></td>`;
+    tbody.appendChild(tr);
+  });
+  if (tbody.children.length === 0) {
+    tbody.appendChild(emptyRow);
+  }
+  tbody.querySelectorAll('.deleteRowBtn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const idx = Number(btn.dataset.i);
+      const entry = entries[idx];
+      btn.disabled = true;
+      btn.textContent = '...';
+      try {
+        if (entry.dbId) {
+          const res = await fetch(API + '/' + encodeURIComponent(entry.dbId), { method: 'DELETE' });
+          if (!res.ok) throw new Error('Delete failed (' + res.status + '): ' + (await res.text()));
+        }
+      } catch (err) {
+        alert('Error deleting: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+        return;
+      }
+      entries.splice(idx, 1);
+      renderTable();
+    });
+  });
+  tbody.querySelectorAll('.hideRowBtn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      entries[Number(btn.dataset.i)].hidden = true;
+      renderTable();
+    });
+  });
+}
+
+</script>
+</body>
+</html>

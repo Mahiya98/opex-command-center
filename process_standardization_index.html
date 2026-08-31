@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Process Standardization Index</title>
+<style>
+  :root{
+    --blue:#1a56c4; --blue-dark:#0e3a8f;
+    --ink:#1c2430; --sub:#5b6472; --line:#e2e5ea;
+    --bg:#f3f4f7; --card:#ffffff;
+    --ok:#1a7f4a; --ok-bg:#e6f5ec;
+    --fail:#c23b3b; --fail-bg:#fbe9e9;
+    --warn:#b5750f; --warn-bg:#fbf1e0;
+    --prog:#1a56c4; --prog-bg:#e8eefc;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);font-family:-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);}
+  .topbar{background:var(--blue-dark);color:#fff;padding:14px 28px;font-size:15px;font-weight:600;letter-spacing:.2px;}
+  .wrap{max-width:900px;margin:32px auto 60px;padding:0 16px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:30px 32px;box-shadow:0 1px 3px rgba(20,30,50,.06);margin-bottom:20px;}
+  h1{font-size:20px;margin:0 0 4px;color:var(--blue-dark);}
+  .subtitle{color:var(--sub);font-size:13px;margin:0 0 22px;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;font-weight:600;color:var(--sub);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em;}
+  input,select,textarea{width:100%;padding:9px 11px;border:1px solid #cfd4dc;border-radius:8px;font-size:14px;background:#fff;color:var(--ink);font-family:inherit;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,196,.12);}
+  textarea{resize:vertical;min-height:80px;}
+  .full{grid-column:1/-1;}
+  button{padding:11px 18px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;}
+  button:hover{background:var(--blue-dark);}
+  button:disabled{background:#b9c3d6;cursor:not-allowed;}
+  .btn-secondary{background:transparent;color:var(--blue);border:1px solid #cfd4dc;}
+  .btn-secondary:hover{background:#eef1f6;}
+  .btn-finalize{background:#fff;color:var(--ok);border:1px solid #bfe4cd;}
+  .btn-finalize:hover{background:var(--ok-bg);}
+  .btn-finalize.active{background:var(--ok);color:#fff;}
+  .full-btn{width:100%;}
+  .summary-box{display:none;margin-top:14px;}
+  .summary-box.show{display:block;}
+  .msg{margin-top:14px;padding:10px 12px;border-radius:8px;font-size:13px;display:none;}
+  .msg.show{display:block;}
+  .msg.ok{background:var(--ok-bg);color:var(--ok);}
+  .msg.error{background:var(--fail-bg);color:var(--fail);}
+
+  /* month progress tracker */
+  .tracker{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .tracker-stat{display:flex;flex-direction:column;}
+  .tracker-num{font-size:26px;font-weight:700;color:var(--blue-dark);}
+  .tracker-label{font-size:12px;color:var(--sub);}
+  .tracker-bar-wrap{flex:1;min-width:160px;}
+  .tracker-bar-bg{height:10px;background:#e8eaee;border-radius:6px;overflow:hidden;}
+  .tracker-bar-fill{height:100%;background:var(--ok);border-radius:6px;transition:width .3s;}
+  .tracker-bar-fill.behind{background:var(--warn);}
+  .tracker-note{font-size:12px;color:var(--sub);margin-top:5px;}
+  .month-select{width:auto;}
+
+  /* filters */
+  .filter-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+  .filter-actions{display:flex;gap:10px;margin-top:4px;}
+
+  /* table */
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;}
+  th{color:var(--sub);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.02em;}
+  .pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+  .pill.not-started{background:#f1f2f5;color:var(--sub);}
+  .pill.in-progress{background:var(--prog-bg);color:var(--prog);}
+  .pill.completed{background:var(--ok-bg);color:var(--ok);}
+  .pill.final{background:#efe7fb;color:#6a3fb5;}
+  .empty{color:#9aa1ab;font-size:13px;padding:14px 0;text-align:center;}
+  .del-btn{padding:4px 10px;background:transparent;color:var(--fail);border:1px solid #f2c3c3;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;}
+  .del-btn:hover{background:var(--fail-bg);}
+  .status-select{font-size:12px;padding:5px 7px;}
+  .fin-btn-sm{font-size:11px;padding:5px 10px;border-radius:6px;}
+  .summary-cell{max-width:220px;font-size:11.5px;color:var(--sub);}
+  .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .name-row{display:flex;gap:8px;margin-bottom:8px;}
+  .name-row input{flex:1;}
+  .name-row .remove-name-btn{padding:0 12px;background:transparent;color:var(--fail);border:1px solid #f2c3c3;border-radius:8px;font-size:16px;line-height:1;cursor:pointer;}
+  .name-row .remove-name-btn:hover{background:var(--fail-bg);}
+</style>
+</head>
+<body>
+
+<div class="topbar">Lean Manufacturing &nbsp;/&nbsp; Process Standardization Index</div>
+
+<div class="wrap">
+
+  <div class="card">
+    <h1>Monthly progress</h1>
+    <p class="subtitle">Target: minimum 2 process standardization projects completed per month.</p>
+    <div class="tracker">
+      <select id="trackerMonth" class="month-select"></select>
+      <div class="tracker-stat">
+        <div class="tracker-num" id="trackerCount">0 / 2</div>
+        <div class="tracker-label">Completed this month</div>
+      </div>
+      <div class="tracker-bar-wrap">
+        <div class="tracker-bar-bg"><div class="tracker-bar-fill" id="trackerBar" style="width:0%"></div></div>
+        <div class="tracker-note" id="trackerNote">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h1>New project entry</h1>
+    <p class="subtitle">Register a new process standardization project.</p>
+
+    <div class="row">
+      <div class="field">
+        <label>Start date</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="field">
+        <label>SBU</label>
+        <select id="sbu">
+          <option value="">Select SBU</option>
+          <option>ACCL</option>
+          <option>AIL</option>
+          <option>AAFL</option>
+          <option>AEL(Flour)</option>
+          <option>APFIL</option>
+          <option>HRML</option>
+          <option>FAL</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field full">
+        <label>Project name(s)</label>
+        <div id="projectNameList"></div>
+        <button type="button" id="addNameBtn" class="btn-secondary" style="margin-top:8px;padding:7px 14px;font-size:13px;">+ Add another project name</button>
+      </div>
+    </div>
+
+    <button type="button" id="addBtn" class="full-btn">Add project</button>
+    <div class="msg ok" id="msg">Project added below.</div>
+  </div>
+
+  <div class="card">
+    <h1>Project register</h1>
+
+    <div class="filter-row">
+      <div class="field">
+        <label>SBU</label>
+        <select id="fSbu"><option value="">All</option></select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="fStatus">
+          <option value="">All</option>
+          <option value="Not Started">Not started</option>
+          <option value="In Progress">In progress</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>From date</label>
+        <input type="date" id="fFrom">
+      </div>
+      <div class="field">
+        <label>To date</label>
+        <input type="date" id="fTo">
+      </div>
+    </div>
+    <div class="filter-actions" style="margin-bottom:20px;">
+      <button id="applyFilter">Apply filters</button>
+      <button id="resetFilter" type="button" class="btn-secondary">Reset</button>
+    </div>
+
+    <table>
+      <thead><tr>
+        <th>Start date</th><th>SBU</th><th>Project name</th><th>Status</th><th>Summary</th><th></th>
+      </tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <p class="empty" id="emptyMsg">No entries yet.</p>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const API_BASE = "http://127.0.0.1:5007/api";
+const TABLE = "accl_process_standardization";
+const MONTHLY_TARGET = 2;
+
+/* ---------------------------------------------------------------------
+   Minimal Supabase-query shim that forwards to the local gateway.
+   Supported (the subset used by this page):
+     sb.from(T).select(cols)[.eq/.gte/.lte][.order()]   -> GET
+     sb.from(T).update(obj).eq(...)                     -> PATCH
+     sb.from(T).delete().eq(...)                        -> DELETE
+     sb.from(T).insert(rows).select()                   -> POST
+   --------------------------------------------------------------------- */
+function qs(params){
+  return Object.entries(params).map(([k,v])=>`${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+}
+function hasIt(value){ // PostgREST sends booleans/numbers as text-ish values
+  return value;
+}
+async function gqlQuery(url, method, body){
+  const res = await fetch(url, {
+    method,
+    headers: {'Content-Type':'application/json'},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if(!res.ok){
+    const text = await res.text().catch(()=> '');
+    throw new Error(`API ${url} failed: ${res.status} ${text}`);
+  }
+  const ct = res.headers.get('content-type') || '';
+  return ct.includes('application/json') ? res.json() : null;
+}
+
+function filterChain(chain){
+  // chain is a list of [op, key, value]
+  const params = {};
+  for(const [op, key, value] of chain){
+    if(op === 'eq') params[key] = `eq.${value}`;
+    else if(op === 'gte') params[key] = `gte.${value}`;
+    else if(op === 'lte') params[key] = `lte.${value}`;
+  }
+  return params;
+}
+
+function makeQueryBuilder(){
+  let chain = [];
+  let orderBy = null;
+  let doSelect = false;
+  const b = {
+    select(cols){ doSelect = true; return b; },
+    eq(k,v){ chain.push(['eq',k,v]); return b; },
+    gte(k,v){ chain.push(['gte',k,v]); return b; },
+    lte(k,v){ chain.push(['lte',k,v]); return b; },
+    order(col,opts){ orderBy = {col, opts}; return b; },
+    async then(resolve, reject){
+      try{
+        const params = filterChain(chain);
+        if(orderBy) params.order = orderBy.col + (orderBy.opts && orderBy.opts.ascending === false ? '.desc' : '.asc');
+        const qsStr = Object.keys(params).length ? '?'+qs(params) : '';
+        const data = await gqlQuery(`${API_BASE}/${TABLE}${qsStr}`, 'GET');
+        resolve({ data, error: null });
+      }catch(e){ resolve({ data: null, error: e }); }
+    }
+  };
+  return b;
+}
+
+const sb = {
+  from(t){
+    const b = makeQueryBuilder();
+    return {
+      select(cols){ b.select(cols); return b; },
+      insert(rows){
+        return {
+          select(){ return { then(resolve){ 
+            gqlQuery(`${API_BASE}/${TABLE}`, 'POST', rows)
+              .then(d => resolve({ data: d, error: null }))
+              .catch(e => resolve({ data: null, error: e }));
+          } } }
+        };
+      },
+      update(obj){
+        return {
+          eq(k,v){
+            return {
+              async then(resolve){
+                try{
+                  const data = await gqlQuery(`${API_BASE}/${TABLE}?${qs({[k]:'eq.'+v})}`, 'PATCH', obj);
+                  resolve({ data, error: null });
+                }catch(e){ resolve({ data: null, error: e }); }
+              }
+            };
+          }
+        };
+      },
+      delete(){
+        return {
+          eq(k,v){
+            return {
+              async then(resolve){
+                try{
+                  const data = await gqlQuery(`${API_BASE}/${TABLE}?${qs({[k]:'eq.'+v})}`, 'DELETE', null);
+                  resolve({ data, error: null });
+                }catch(e){ resolve({ data: null, error: e }); }
+              }
+            };
+          }
+        };
+      }
+    };
+  }
+};
+
+const $ = id => document.getElementById(id);
+const startDateEl=$('startDate'), sbuEl=$('sbu'),
+      projectNameList=$('projectNameList'), addNameBtn=$('addNameBtn'),
+      addBtn=$('addBtn'), msg=$('msg'), tableBody=$('tableBody'), emptyMsg=$('emptyMsg');
+const fSbu=$('fSbu'), fStatus=$('fStatus'), fFrom=$('fFrom'), fTo=$('fTo'),
+      applyFilterBtn=$('applyFilter'), resetFilterBtn=$('resetFilter');
+const trackerMonth=$('trackerMonth'), trackerCount=$('trackerCount'),
+      trackerBar=$('trackerBar'), trackerNote=$('trackerNote');
+
+function showMessage(text, type='ok'){
+  msg.textContent = text;
+  msg.className = 'msg show ' + type;
+  clearTimeout(showMessage._t);
+  showMessage._t = setTimeout(()=> msg.classList.remove('show'), type==='error' ? 4000 : 2500);
+}
+
+function addNameRow(){
+  const row = document.createElement('div');
+  row.className = 'name-row';
+  row.innerHTML = `<input type="text" class="project-name-input" placeholder="e.g. SOP of VRM">
+    <button type="button" class="remove-name-btn" title="Remove">&times;</button>`;
+  row.querySelector('.remove-name-btn').addEventListener('click', ()=>{
+    if(projectNameList.children.length > 1){
+      row.remove();
+    } else {
+      row.querySelector('input').value = '';
+    }
+  });
+  projectNameList.appendChild(row);
+}
+addNameRow(); // start with one row
+addNameBtn.addEventListener('click', addNameRow);
+
+const SBU_OPTIONS = ["ACCL","AIL","AAFL","AEL(Flour)","APFIL","HRML","FAL"];
+fSbu.innerHTML = '<option value="">All</option>' + SBU_OPTIONS.map(s=>`<option>${s}</option>`).join('');
+
+function statusClass(status){
+  if(status === 'Completed') return 'completed';
+  if(status === 'In Progress') return 'in-progress';
+  return 'not-started';
+}
+
+function monthKey(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function monthLabel(key){
+  const [y,m] = key.split('-').map(Number);
+  return new Date(y, m-1, 1).toLocaleString('en-US',{month:'long', year:'numeric'});
+}
+
+function populateMonthOptions(){
+  const now = new Date();
+  const opts = [];
+  for(let i=0;i<12;i++){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    opts.push({key, label: monthLabel(key)});
+  }
+  trackerMonth.innerHTML = opts.map(o=>`<option value="${o.key}">${o.label}</option>`).join('');
+}
+populateMonthOptions();
+
+async function refreshTracker(){
+  const key = trackerMonth.value;
+  const [y,m] = key.split('-').map(Number);
+  const from = `${key}-01`;
+  const lastDay = new Date(y, m, 0).getDate();
+  const to = `${key}-${String(lastDay).padStart(2,'0')}`;
+
+  const { data, error } = await sb.from(TABLE).select('status').gte('start_date', from).lte('start_date', to);
+  if(error){ trackerNote.textContent = 'Could not load: ' + error.message; return; }
+
+  const completed = data.filter(r => r.status === 'Completed').length;
+  trackerCount.textContent = `${completed} / ${MONTHLY_TARGET}`;
+  const pct = Math.min(100, Math.round((completed / MONTHLY_TARGET) * 100));
+  trackerBar.style.width = pct + '%';
+  trackerBar.classList.toggle('behind', completed < MONTHLY_TARGET);
+  trackerNote.textContent = completed >= MONTHLY_TARGET
+    ? `Target met for ${monthLabel(key)}.`
+    : `${MONTHLY_TARGET - completed} more project(s) needed to hit target for ${monthLabel(key)}.`;
+}
+trackerMonth.addEventListener('change', refreshTracker);
+
+function buildRow(r){
+  const tr = document.createElement('tr');
+  tr.dataset.id = r.id;
+
+  const summaryCell = r.is_finalized && r.summary
+    ? `<span class="summary-cell">${r.summary}</span>`
+    : `<span class="summary-cell" style="color:#c3c8d1;">—</span>`;
+
+  const finalizeBtnLabel = r.is_finalized ? 'Finalized' : 'Finalize';
+
+  tr.innerHTML = `
+    <td>${r.start_date || '—'}</td>
+    <td>${r.sbu}</td>
+    <td>${r.project_name}</td>
+    <td>
+      <select class="status-select">
+        <option value="Not Started" ${r.status==='Not Started'?'selected':''}>Not started</option>
+        <option value="In Progress" ${r.status==='In Progress'?'selected':''}>In progress</option>
+        <option value="Completed" ${r.status==='Completed'?'selected':''}>Completed</option>
+      </select>
+    </td>
+    <td>${summaryCell}</td>
+    <td>
+      <div class="row-actions">
+        <button type="button" class="fin-btn-sm btn-finalize ${r.is_finalized?'active':''}">${finalizeBtnLabel}</button>
+        <button type="button" class="del-btn">Delete</button>
+      </div>
+    </td>`;
+
+  // status change -> update db
+  tr.querySelector('.status-select').addEventListener('change', async (e)=>{
+    const newStatus = e.target.value;
+    const { error } = await sb.from(TABLE).update({status:newStatus}).eq('id', r.id);
+    if(error){ showMessage('Could not update status: ' + error.message, 'error'); return; }
+    r.status = newStatus;
+    refreshTracker();
+  });
+
+  // finalize -> reveal inline textarea to capture summary, save on blur/enter
+  tr.querySelector('.fin-btn-sm').addEventListener('click', ()=>{
+    if(tr.querySelector('.inline-summary-row')) return; // already open
+    const box = document.createElement('tr');
+    box.className = 'inline-summary-row';
+    box.innerHTML = `<td colspan="6">
+        <div class="summary-box show">
+          <label style="font-size:11.5px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.03em;display:block;margin-bottom:6px;">
+            Project summary
+          </label>
+          <textarea placeholder="Summarize what was done, outcome, and any follow-up...">${r.summary || ''}</textarea>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button type="button" class="save-summary-btn" style="padding:8px 16px;">Save summary & finalize</button>
+            <button type="button" class="cancel-summary-btn btn-secondary" style="padding:8px 16px;">Cancel</button>
+          </div>
+        </div>
+      </td>`;
+    tr.after(box);
+
+    box.querySelector('.cancel-summary-btn').addEventListener('click', ()=> box.remove());
+    box.querySelector('.save-summary-btn').addEventListener('click', async ()=>{
+      const summaryText = box.querySelector('textarea').value.trim();
+      if(!summaryText){ showMessage('Write a summary before finalizing.', 'error'); return; }
+      const { error } = await sb.from(TABLE).update({ is_finalized:true, summary:summaryText }).eq('id', r.id);
+      if(error){ showMessage('Could not save summary: ' + error.message, 'error'); return; }
+      r.is_finalized = true;
+      r.summary = summaryText;
+      box.remove();
+      loadEntries();
+    });
+  });
+
+  tr.querySelector('.del-btn').addEventListener('click', async (e)=>{
+    const btn = e.currentTarget;
+    if(btn.dataset.confirming !== 'yes'){
+      btn.dataset.confirming = 'yes';
+      btn.textContent = 'Click again to confirm';
+      setTimeout(()=>{ btn.dataset.confirming=''; btn.textContent='Delete'; }, 3000);
+      return;
+    }
+    btn.textContent = 'Deleting…';
+    const { error } = await sb.from(TABLE).delete().eq('id', r.id);
+    if(error){ showMessage('Could not delete: ' + error.message, 'error'); btn.textContent='Delete'; btn.dataset.confirming=''; return; }
+    tr.remove();
+    if(!tableBody.children.length) emptyMsg.style.display='block';
+    refreshTracker();
+  });
+
+  return tr;
+}
+
+async function loadEntries(){
+  let query = sb.from(TABLE).select('*').order('start_date', {ascending:false});
+
+  if(fSbu.value) query = query.eq('sbu', fSbu.value);
+  if(fStatus.value) query = query.eq('status', fStatus.value);
+  if(fFrom.value) query = query.gte('start_date', fFrom.value);
+  if(fTo.value) query = query.lte('start_date', fTo.value);
+
+  const { data, error } = await query;
+  if(error){ showMessage('Could not load entries: ' + error.message, 'error'); return; }
+
+  tableBody.innerHTML = '';
+  if(!data.length){ emptyMsg.style.display='block'; return; }
+  emptyMsg.style.display='none';
+  data.forEach(r => tableBody.appendChild(buildRow(r)));
+}
+
+addBtn.addEventListener('click', async ()=>{
+  const names = [...projectNameList.querySelectorAll('.project-name-input')]
+    .map(i => i.value.trim())
+    .filter(v => v.length > 0);
+
+  if(!startDateEl.value || !sbuEl.value || names.length === 0){
+    showMessage('Fill in start date, SBU, and at least one project name.', 'error');
+    return;
+  }
+
+  addBtn.disabled = true;
+  addBtn.textContent = 'Saving…';
+
+  try{
+    const rows = names.map(name => ({
+      start_date: startDateEl.value,
+      sbu: sbuEl.value,
+      project_name: name,
+      status: 'Not Started',
+      is_finalized: false
+    }));
+
+    const { data, error } = await sb.from(TABLE).insert(rows).select();
+
+    if(error){
+      showMessage('Could not save: ' + error.message, 'error');
+      return;
+    }
+
+    showMessage(`${data.length} project${data.length>1?'s':''} added below.`, 'ok');
+
+    // reset form
+    projectNameList.innerHTML = '';
+    addNameRow();
+    sbuEl.value = '';
+    startDateEl.value = '';
+
+    await loadEntries();
+    await refreshTracker();
+  } catch(err){
+    showMessage('Unexpected error: ' + err.message, 'error');
+    console.error(err);
+  } finally{
+    addBtn.disabled = false;
+    addBtn.textContent = 'Add project';
+  }
+});
+
+applyFilterBtn.addEventListener('click', (e)=>{ e.preventDefault(); loadEntries(); });
+resetFilterBtn.addEventListener('click', ()=>{
+  fSbu.value=''; fStatus.value=''; fFrom.value=''; fTo.value='';
+  loadEntries();
+});
+
+refreshTracker();
+loadEntries();
+</script>
+</body>
+</html>

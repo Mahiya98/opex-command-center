@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>5S Audit Command Center</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #12161f;
+    --panel-border: #232838;
+    --field-bg: #171c28;
+    --field-border: #2a3040;
+    --text: #e8eaef;
+    --muted: #8b93a7;
+    --accent: #d99a3d;
+    --accent-soft: rgba(217,154,61,0.12);
+    --good: #3fae62;
+    --good-soft: rgba(63,174,98,0.14);
+    --avg: #d9b83d;
+    --avg-soft: rgba(217,184,61,0.14);
+    --bad: #d9553d;
+    --bad-soft: rgba(217,85,61,0.14);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--panel-border);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 16px;
+    letter-spacing: 0.3px;
+  }
+  .brand .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+  .top-tabs {
+    display: flex;
+    gap: 6px;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  .top-tabs span {
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .top-tabs span.active {
+    background: var(--accent);
+    color: #1a1300;
+  }
+
+  .page {
+    padding: 28px 32px 48px;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  h1 {
+    font-size: 32px;
+    margin: 0 0 10px 0;
+  }
+  .lede {
+    color: var(--muted);
+    font-size: 14.5px;
+    max-width: 760px;
+    line-height: 1.55;
+    margin-bottom: 30px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 22px;
+    align-items: start;
+  }
+  @media (max-width: 980px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 22px;
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .badge-tag {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .badge-tag.log { background: rgba(139,147,167,0.15); color: var(--muted); }
+  .panel-title {
+    font-size: 17px;
+    font-weight: 700;
+  }
+  .panel-sub {
+    color: var(--muted);
+    font-size: 12.5px;
+    margin: 8px 0 20px 0;
+    line-height: 1.5;
+  }
+  .req { color: var(--bad); }
+
+  .field {
+    margin-bottom: 16px;
+  }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--text);
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .field .hint {
+    color: var(--muted);
+    font-weight: 400;
+    font-size: 11px;
+    margin-left: 4px;
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    width: 100%;
+    background: var(--field-bg);
+    border: 1px solid var(--field-border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 11px 12px;
+    font-size: 13.5px;
+    font-family: inherit;
+    outline: none;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus {
+    border-color: var(--accent);
+  }
+  .field textarea { resize: vertical; min-height: 60px; }
+  .field.readonly input {
+    color: var(--muted);
+  }
+  .row2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .pillar-block {
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 14px 14px 4px;
+    margin-bottom: 14px;
+    background: rgba(255,255,255,0.01);
+  }
+  .pillar-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    background: var(--accent);
+    color: #1a1300;
+    border: none;
+    border-radius: 9px;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 6px;
+  }
+  .submit-btn:hover { filter: brightness(1.08); }
+
+  /* Right panel - logged cards */
+  .filters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 18px 0 18px 0;
+  }
+  .filter-pill {
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--field-border);
+    background: var(--field-bg);
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .filter-pill.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+  select.filter-pill {
+    -webkit-appearance: none;
+    appearance: none;
+    font-family: inherit;
+  }
+  select.filter-pill:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .cards-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 760px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  .card {
+    border: 1px solid var(--panel-border);
+    background: var(--field-bg);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .card-id-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-id {
+    font-family: "Courier New", monospace;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+  .status-chip {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .status-good { background: var(--good-soft); color: var(--good); }
+  .status-avg { background: var(--avg-soft); color: var(--avg); }
+  .status-bad { background: var(--bad-soft); color: var(--bad); }
+  .card-meta {
+    color: var(--muted);
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+  .tag-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+  }
+  .section-label {
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    margin-top: 10px;
+  }
+  .criteria-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .criteria-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--panel-border);
+    border-radius: 7px;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .criteria-item .k { color: var(--muted); display: block; margin-bottom: 2px; }
+  .criteria-item .v { font-weight: 700; }
+  .remarks-text {
+    font-size: 12.5px;
+    color: var(--text);
+    line-height: 1.5;
+    margin-top: 2px;
+  }
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .final-score-pill {
+    font-weight: 800;
+    font-size: 13px;
+  }
+  .del-link {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 11.5px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+  .del-link:hover { color: var(--bad); }
+  .hide-link {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 11.5px;
+    cursor: pointer;
+    text-decoration: underline;
+    margin-right: 14px;
+  }
+  .hide-link:hover { color: var(--accent); }
+  .hidden-toggle {
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-left: auto;
+  }
+  .hidden-toggle:hover { color: var(--accent); }
+  .empty-state {
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 40px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="dot"></span> 5S Audit Command Center</div>
+  <div class="top-tabs">
+    <span class="active">Audit Entries</span>
+  </div>
+</header>
+
+<div class="page">
+  <div class="eyebrow"><span class="dot"></span> 5S AUDIT LOG</div>
+  <h1>5S Audit Entries</h1>
+  <div class="lede">Audit numbers are assigned automatically in order (AUD-01, AUD-02, ...). Log a new audit on the left; every submission appears instantly as a card on the right. Scoring: 1 = Very Bad · 2 = Bad · 3 = Average · 4 = Good · 5 = Very Good. Sort, Set in Order, and Shine each use the average of their two questions; Standardize and Sustain are single scores out of 5. Total possible = 25 (5 pillars × 5). Final Score = (Total ÷ 25) × 100%.</div>
+
+  <div class="grid">
+    <!-- LEFT: FORM -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="badge-tag">NEW</span>
+        <span class="panel-title">Log an entry</span>
+      </div>
+      <div class="panel-sub">Fields marked <span class="req">*</span> are required.</div>
+
+      <div class="row2">
+        <div class="field readonly">
+          <label>Audit No <span class="hint">auto-assigned</span></label>
+          <input type="text" id="auditNo" readonly>
+        </div>
+        <div class="field">
+          <label>Timestamp <span class="hint">auto</span></label>
+          <input type="text" id="timestampDisplay" readonly>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>SBU <span class="req">*</span></label>
+        <select id="sbuSelect">
+          <option value="">Select SBU...</option>
+          <option value="ACCL">ACCL</option>
+          <option value="APFIL">APFIL</option>
+          <option value="FAL">FAL</option>
+          <option value="HRML">HRML</option>
+          <option value="M.OIL">M.OIL</option>
+          <option value="AEFML">AEFML</option>
+          <option value="AAFL">AAFL</option>
+          <option value="ALEL">ALEL</option>
+          <option value="AIL">AIL</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Audit Place <span class="req">*</span></label>
+        <select id="auditPlace" disabled>
+          <option value="">Select SBU first...</option>
+        </select>
+      </div>
+
+      <div class="field" id="auditPlaceCustomWrap" style="display:none;">
+        <label>New Audit Place Name <span class="req">*</span></label>
+        <input type="text" id="auditPlaceCustom" placeholder="Type the new audit place name">
+        <label style="display:flex; align-items:center; gap:7px; margin-top:8px; font-size:12.5px; color:var(--muted); cursor:pointer;">
+          <input type="checkbox" id="auditPlaceSaveNew" checked style="width:auto; margin:0;">
+          Save this place to the list for future audits
+        </label>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Auditor Name <span class="req">*</span></label>
+          <input type="text" id="auditorName" placeholder="Full name">
+        </div>
+        <div class="field">
+          <label>Auditor Enroll <span class="req">*</span></label>
+          <input type="text" id="auditorEnroll" placeholder="e.g. 562297">
+        </div>
+      </div>
+
+      <div class="pillar-block">
+        <div class="pillar-title">1. Sort (Seiri)</div>
+        <div class="field">
+          <label>Unnecessary items removed? <span class="req">*</span></label>
+          <select id="s1">
+            <option value="">Select score...</option>
+            <option value="1">1 = Very Bad</option>
+            <option value="2">2 = Bad</option>
+            <option value="3">3 = Average</option>
+            <option value="4">4 = Good</option>
+            <option value="5">5 = Very Good</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Red tags applied to unused items? <span class="req">*</span></label>
+          <select id="s2">
+            <option value="">Select score...</option>
+            <option value="1">1 = Very Bad</option>
+            <option value="2">2 = Bad</option>
+            <option value="3">3 = Average</option>
+            <option value="4">4 = Good</option>
+            <option value="5">5 = Very Good</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pillar-block">
+        <div class="pillar-title">2. Set in Order (Seiton)</div>
+        <div class="field">
+          <label>Tools/materials assigned fixed locations? <span class="req">*</span></label>
+          <select id="s3">
+            <option value="">Select score...</option>
+            <option value="1">1 = Very Bad</option>
+            <option value="2">2 = Bad</option>
+            <option value="3">3 = Average</option>
+            <option value="4">4 = Good</option>
+            <option value="5">5 = Very Good</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Labels and markings visible & correct? <span class="req">*</span></label>
+          <select id="s4">
+            <option value="">Select score...</option>
+            <option value="1">1 = Very Bad</option>
+            <option value="2">2 = Bad</option>
+            <option value="3">3 = Average</option>
+            <option value="4">4 = Good</option>
+            <option value="5">5 = Very Good</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pillar-block">
+        <div class="pillar-title">3. Shine (Seiso)</div>
+        <div class="field">
+          <label>Area clean and free of dust? <span class="req">*</span></label>
+          <select id="s5">
+            <option value="">Select score...</option>
+            <option value="1">1 = Very Bad</option>
+            <option value="2">2 = Bad</option>
+            <option value="3">3 = Average</option>
+            <option value="4">4 = Good</option>
+            <option value="5">5 = Very Good</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cleaning responsibility assigned? <span class="req">*</span></label>
+          <select id="s6">
+            <option value="">Select score...</option>
+            <option value="1">1 = Very Bad</option>
+            <option value="2">2 = Bad</option>
+            <option value="3">3 = Average</option>
+            <option value="4">4 = Good</option>
+            <option value="5">5 = Very Good</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pillar-block">
+        <div class="pillar-title">4. Standardize (Seiketsu)</div>
+        <div class="field">
+          <label>Documented standard followed consistently across shifts? <span class="req">*</span></label>
+          <select id="s7">
+            <option value="">Select score...</option>
+            <option value="1">1 = Very Bad</option>
+            <option value="2">2 = Bad</option>
+            <option value="3">3 = Average</option>
+            <option value="4">4 = Good</option>
+            <option value="5">5 = Very Good</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pillar-block">
+        <div class="pillar-title">5. Sustain (Shitsuke)</div>
+        <div class="field">
+          <label>Practicing 5S without reminders? <span class="req">*</span></label>
+          <select id="s8">
+            <option value="">Select score...</option>
+            <option value="1">1 = Very Bad</option>
+            <option value="2">2 = Bad</option>
+            <option value="3">3 = Average</option>
+            <option value="4">4 = Good</option>
+            <option value="5">5 = Very Good</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Picture Links <span class="hint">paste image URLs</span></label>
+        <div id="pictureLinksList"></div>
+        <button type="button" id="addPictureLinkBtn" style="margin-top:6px; background:var(--field-bg); border:1px solid var(--field-border); color:var(--text); border-radius:8px; padding:8px 12px; font-size:12.5px; cursor:pointer;">+ Add another image</button>
+      </div>
+
+      <div class="field">
+        <label>Remarks <span class="hint">if any note you want to share</span></label>
+        <textarea id="remarks" placeholder="Optional notes..."></textarea>
+      </div>
+
+      <button class="submit-btn" id="submitBtn">Log Entry</button>
+    </div>
+
+    <!-- RIGHT: LOGGED CARDS -->
+    <div class="panel">
+      <div class="panel-head">
+        <span class="badge-tag log">LOG</span>
+        <span class="panel-title">Logged audits</span>
+        <span class="card-meta" id="statusMsg" style="margin-left:auto; color:var(--accent); font-weight:600;"></span>
+      </div>
+      <div class="panel-sub">Every logged audit appears below as a card with its auto-computed Final Score.</div>
+
+      <div class="filters" id="filters">
+        <div class="filter-pill active" data-filter="all">All</div>
+        <select class="filter-pill" id="sbuFilter">
+          <option value="all">All SBUs</option>
+          <option value="ACCL">ACCL</option>
+          <option value="APFIL">APFIL</option>
+          <option value="FAL">FAL</option>
+          <option value="HRML">HRML</option>
+          <option value="M.OIL">M.OIL</option>
+          <option value="AEFML">AEFML</option>
+          <option value="AAFL">AAFL</option>
+          <option value="ALEL">ALEL</option>
+          <option value="AIL">AIL</option>
+        </select>
+        <span class="hidden-toggle" id="hiddenToggle">Show hidden (0)</span>
+        <input type="date" class="filter-pill" id="dateFrom" autocomplete="off" style="cursor:pointer;">
+        <span style="color:var(--muted); font-size:12.5px;">to</span>
+        <input type="date" class="filter-pill" id="dateTo" autocomplete="off" style="cursor:pointer;">
+        <span class="hidden-toggle" id="clearDateFilter">Clear dates</span>
+      </div>
+
+      <div class="cards-list" id="cardsList"></div>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:22px;">
+    <div class="panel-head">
+      <span class="badge-tag">SETUP</span>
+      <span class="panel-title">Manage Audit Places</span>
+    </div>
+    <div class="panel-sub">Add a new audit place for an SBU, or remove one that's no longer needed. Changes apply immediately to the Audit Place dropdown above for everyone using this page in this browser.</div>
+
+    <div class="row2">
+      <div class="field">
+        <label>SBU</label>
+        <select id="managePlaceSbu">
+          <option value="">Select SBU...</option>
+          <option value="ACCL">ACCL</option>
+          <option value="APFIL">APFIL</option>
+          <option value="FAL">FAL</option>
+          <option value="HRML">HRML</option>
+          <option value="M.OIL">M.OIL</option>
+          <option value="AEFML">AEFML</option>
+          <option value="AAFL">AAFL</option>
+          <option value="ALEL">ALEL</option>
+          <option value="AIL">AIL</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>New Audit Place</label>
+        <input type="text" id="managePlaceNew" placeholder="e.g. New warehouse section">
+      </div>
+    </div>
+    <button type="button" id="managePlaceAddBtn" class="submit-btn" style="margin-top:0;">+ Add Audit Place</button>
+
+    <div id="managePlaceList" style="margin-top:18px; display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   FLASK API CONNECTION  -  accl_5s_audit_entries (PostgreSQL)
+   Replaces the original Supabase REST layer.
+   ============================================================ */
+const API = "http://127.0.0.1:5001/api/entries";
+const ROW_LIMIT = 1000;   // most recent audits to load
+
+/* Column map: UI field  ->  table column (identical names) */
+const COL = {
+  id:            "id",
+  auditNo:       "audit_no",
+  timestamp:     "audit_timestamp",
+  sbu:           "sbu",
+  place:         "audit_place",
+  auditor:       "auditor_name",
+  enroll:        "auditor_enroll",
+  s1:            "sort_removed",
+  s2:            "sort_redtag",
+  s3:            "order_location",
+  s4:            "order_labels",
+  s5:            "shine_clean",
+  s6:            "shine_assigned",
+  s7:            "standardize",
+  s8:            "sustain",
+  remarks:       "remarks",
+  pictureLinks:  "picture_links"
+};
+
+let entries = [];
+let activeFilter = "all";
+let activeSbuFilter = "all";
+let dateFrom = "";
+let dateTo = "";
+let dateFilterActive = false;
+let userTouchedDates = false;
+["pointerdown", "keydown"].forEach(evt => {
+  document.addEventListener(evt, (e) => {
+    if (e.target && (e.target.id === "dateFrom" || e.target.id === "dateTo")) {
+      userTouchedDates = true;
+    }
+  }, true);
+});
+let showHidden = false;
+const HIDDEN_KEY = "5s_audit_hidden_ids_v1";
+let hiddenIds = new Set(JSON.parse(localStorage.getItem(HIDDEN_KEY) || "[]"));
+
+function saveHiddenIds() {
+  localStorage.setItem(HIDDEN_KEY, JSON.stringify(Array.from(hiddenIds)));
+}
+let highestAuditNum = 0;
+
+function renderPictureLinkInputs() {
+  const list = document.getElementById("pictureLinksList");
+  if (!list.children.length) addPictureLinkRow();
+}
+
+function addPictureLinkRow(value) {
+  const list = document.getElementById("pictureLinksList");
+  const row = document.createElement("div");
+  row.style.display = "flex";
+  row.style.gap = "6px";
+  row.style.marginTop = "6px";
+  row.innerHTML = `
+    <input type="url" class="picture-link-input" placeholder="https://..." style="flex:1;" value="${value ? escapeHtml(value) : ""}">
+    <button type="button" class="remove-picture-link" style="background:var(--field-bg); border:1px solid var(--field-border); color:var(--muted); border-radius:8px; padding:0 12px; cursor:pointer;">✕</button>
+  `;
+  row.querySelector(".remove-picture-link").addEventListener("click", () => {
+    row.remove();
+  });
+  list.appendChild(row);
+}
+
+document.getElementById("addPictureLinkBtn").addEventListener("click", () => addPictureLinkRow());
+
+/* ============================================================
+   AUDIT PLACE LISTS  -  per-SBU dropdown options (localStorage)
+   ============================================================ */
+const DEFAULT_PLACES = {
+  ACCL: [
+    "VRM 1 (Ground floor)",
+    "VRM 1(Cell 1)",
+    "VRM 1 (Cell 2)",
+    "VRM 2( Ground floor)",
+    "VRM-2 Cell-2 (2nd Floor & 3rd Floor)",
+    "VRM-2 Cell-3 (Hopper Building)",
+    "Packer 1 & 2 Production Floor",
+    "Packer 3 - Ground Floor (Storage Floor)",
+    "Packer 3 - Production Floor",
+    "Packer 4&5 Production Floor",
+    "Packer Bag Storage floor"
+  ],
+  AIL: [
+    "Rolling Cell-1",
+    "Rolling Cell-2",
+    "Rolling Maintenance Cell-1",
+    "SMS Maintenance Cell-2",
+    "Melting Cell-1",
+    "CCM Cell-2",
+    "Bending Cell-1",
+    "Bending Cell-2"
+  ],
+  APFIL: [
+    "Production Floor (Unit 1, Floor 1)",
+    "Production Floor (Unit 1, Floor 2)",
+    "Production Floor (Unit 2, Floor 1)",
+    "Production Floor (Unit 2, Floor 2)",
+    "Production Floor (Unit 2, Floor 3)",
+    "Production Floor (Unit 2, Floor 4)",
+    "Warehouse (Unit 2, Ground Floor)",
+    "Store (Unit 1, Floor 2)",
+    "Maintenance Workshops (Unit 1)",
+    "Maintenance Room (Unit 2)"
+  ],
+  AAFL: [
+    "Warehouse (RM & FG)",
+    "Mechanical Store",
+    "Mechanical Workshop",
+    "Electrical Workshop",
+    "Process Tower (Packing)",
+    "Process Tower (1 & 2)",
+    "Process Tower (3 & 4)",
+    "Process Tower (5 & 6)"
+  ],
+  AEFML: [
+    "Flour CELL 01 (CCR 1st floor)",
+    "Flour CELL 02 (Packer 1st floor)",
+    "Flour CELL 03 (Packer 2nd Floor)",
+    "Flour CELL 04 ( Warehouse, Flour & Bran Loading Point)",
+    "Daal Packing Section (Ground Floor)",
+    "Daal Milling Section(First Floor)",
+    "Daal Milling Section 2 (Second Floor)",
+    "Mechanical Workshop",
+    "Electrical Workshop",
+    "Store"
+  ],
+  FAL: [
+    "Milling Section",
+    "Dryer and Parboiling Section",
+    "Warehouse Section",
+    "Maintenance Section"
+  ],
+  HRML: [
+    "GL",
+    "Boiled Milling",
+    "Aromatic Milling",
+    "Warehouse"
+  ],
+  ALEL: [
+    "Warehouse (Feed Portion)",
+    "Warehouse (1st Floor)",
+    "Molding Section",
+    "Ground Floor",
+    "Mechanical Workshop",
+    "GSS (2nd Floor)",
+    "HAP (3rd Floor)",
+    "LED (3rd Floor)",
+    "LED (1st Floor)",
+    "MRO Item (Store)",
+    "IMM - Crushing Zone",
+    "Entrance & Common Places"
+  ],
+  "M.OIL": []
+};
+
+const PLACE_OVERRIDES_KEY = "5s_audit_place_overrides_v1";
+let placeOverrides = {};
+try {
+  placeOverrides = JSON.parse(localStorage.getItem(PLACE_OVERRIDES_KEY) || "{}");
+} catch (e) {
+  placeOverrides = {};
+}
+
+function savePlaceOverrides() {
+  localStorage.setItem(PLACE_OVERRIDES_KEY, JSON.stringify(placeOverrides));
+}
+
+function getPlacesForSbu(sbu) {
+  if (!sbu) return [];
+  const base = DEFAULT_PLACES[sbu] || [];
+  const ov = placeOverrides[sbu] || { added: [], removed: [] };
+  const removed = new Set(ov.removed || []);
+  const list = base.filter(p => !removed.has(p));
+  (ov.added || []).forEach(p => {
+    if (!list.includes(p)) list.push(p);
+  });
+  return list;
+}
+
+function addCustomPlace(sbu, place) {
+  if (!sbu || !place) return;
+  if (!placeOverrides[sbu]) placeOverrides[sbu] = { added: [], removed: [] };
+  placeOverrides[sbu].removed = (placeOverrides[sbu].removed || []).filter(p => p !== place);
+  const isDefault = (DEFAULT_PLACES[sbu] || []).includes(place);
+  if (!isDefault && !placeOverrides[sbu].added.includes(place)) {
+    placeOverrides[sbu].added.push(place);
+  }
+  savePlaceOverrides();
+}
+
+function removeCustomPlace(sbu, place) {
+  if (!sbu || !place || !placeOverrides[sbu]) placeOverrides[sbu] = placeOverrides[sbu] || { added: [], removed: [] };
+  placeOverrides[sbu].added = (placeOverrides[sbu].added || []).filter(p => p !== place);
+  if ((DEFAULT_PLACES[sbu] || []).includes(place) && !(placeOverrides[sbu].removed || []).includes(place)) {
+    placeOverrides[sbu].removed = placeOverrides[sbu].removed || [];
+    placeOverrides[sbu].removed.push(place);
+  }
+  savePlaceOverrides();
+}
+
+function showCustomPlaceInput() {
+  const wrap = document.getElementById("auditPlaceCustomWrap");
+  wrap.style.display = "block";
+  document.getElementById("auditPlaceCustom").value = "";
+  document.getElementById("auditPlaceCustom").focus();
+}
+
+function hideCustomPlaceInput() {
+  document.getElementById("auditPlaceCustomWrap").style.display = "none";
+}
+
+function populateAuditPlaceOptions(sbu, keepValue) {
+  const sel = document.getElementById("auditPlace");
+  if (!sbu) {
+    sel.innerHTML = '<option value="">Select SBU first...</option>';
+    sel.disabled = true;
+    hideCustomPlaceInput();
+    return;
+  }
+  sel.disabled = false;
+  const places = getPlacesForSbu(sbu);
+  const opts = ['<option value="">Select audit place...</option>'];
+  places.forEach(p => opts.push(`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`));
+  opts.push('<option value="__add_new__">+ Add new audit place…</option>');
+  sel.innerHTML = opts.join("");
+  if (keepValue && places.includes(keepValue)) {
+    sel.value = keepValue;
+  }
+  hideCustomPlaceInput();
+}
+
+document.getElementById("sbuSelect").addEventListener("change", (e) => {
+  populateAuditPlaceOptions(e.target.value);
+});
+
+document.getElementById("auditPlace").addEventListener("change", (e) => {
+  if (e.target.value === "__add_new__") {
+    showCustomPlaceInput();
+  } else {
+    hideCustomPlaceInput();
+  }
+});
+
+function refreshManagePlaceList() {
+  const sbu = document.getElementById("managePlaceSbu").value;
+  const wrap = document.getElementById("managePlaceList");
+  if (!sbu) {
+    wrap.innerHTML = '<div style="color:var(--muted); font-size:12.5px;">Select an SBU above to see and manage its audit places.</div>';
+    return;
+  }
+  const places = getPlacesForSbu(sbu);
+  if (!places.length) {
+    wrap.innerHTML = '<div style="color:var(--muted); font-size:12.5px;">No audit places yet for this SBU. Add one above.</div>';
+    return;
+  }
+  wrap.innerHTML = places.map(p => `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--field-bg); border:1px solid var(--field-border); border-radius:8px; padding:9px 13px;">
+      <span style="font-size:13px;">${escapeHtml(p)}</span>
+      <button type="button" class="manage-place-remove" data-sbu="${escapeHtml(sbu)}" data-place="${escapeHtml(p)}" style="background:transparent; border:1px solid var(--bad); color:var(--bad); border-radius:6px; padding:4px 10px; cursor:pointer; font-size:11.5px;">Remove</button>
+    </div>
+  `).join("");
+  wrap.querySelectorAll(".manage-place-remove").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const s = btn.getAttribute("data-sbu");
+      const p = btn.getAttribute("data-place");
+      if (!confirm(`Remove "${p}" from ${s}'s audit place list?`)) return;
+      removeCustomPlace(s, p);
+      refreshManagePlaceList();
+      if (document.getElementById("sbuSelect").value === s) {
+        populateAuditPlaceOptions(s);
+      }
+    });
+  });
+}
+
+document.getElementById("managePlaceSbu").addEventListener("change", refreshManagePlaceList);
+
+document.getElementById("managePlaceAddBtn").addEventListener("click", () => {
+  const sbu = document.getElementById("managePlaceSbu").value;
+  const input = document.getElementById("managePlaceNew");
+  const val = input.value.trim();
+  if (!sbu) { alert("Select an SBU first."); return; }
+  if (!val) { alert("Type a place name to add."); return; }
+  addCustomPlace(sbu, val);
+  input.value = "";
+  refreshManagePlaceList();
+  if (document.getElementById("sbuSelect").value === sbu) {
+    populateAuditPlaceOptions(sbu);
+  }
+});
+
+function getPictureLinks() {
+  return Array.from(document.querySelectorAll(".picture-link-input"))
+    .map(inp => inp.value.trim())
+    .filter(v => v !== "");
+}
+
+function resetPictureLinkInputs() {
+  document.getElementById("pictureLinksList").innerHTML = "";
+  addPictureLinkRow();
+}
+
+/* ---------- Row mapping: DB row -> internal UI shape ---------- */
+function fromDbRow(row) {
+  const pics = row[COL.pictureLinks];
+  return {
+    dbId:         row[COL.id],
+    id:           row[COL.auditNo] || ("AUD-" + row[COL.id]),
+    rawTimestamp: row[COL.timestamp] || null,
+    timestamp:    row[COL.timestamp]
+                    ? new Date(row[COL.timestamp]).toLocaleString("en-GB", {
+                        year: "numeric", month: "2-digit", day: "2-digit",
+                        hour: "2-digit", minute: "2-digit"
+                      }).replace(",", "")
+                    : "",
+    sbu:          row[COL.sbu] || "",
+    place:        row[COL.place] || "",
+    auditor:      row[COL.auditor] || "",
+    enroll:       row[COL.enroll] || "",
+    s1: row[COL.s1], s2: row[COL.s2],
+    s3: row[COL.s3], s4: row[COL.s4],
+    s5: row[COL.s5], s6: row[COL.s6],
+    s7: row[COL.s7], s8: row[COL.s8],
+    remarks:      row[COL.remarks] || "",
+    pictureLinks: Array.isArray(pics) ? pics : (pics ? [pics] : [])
+  };
+}
+
+/* ---------- Row mapping: internal UI shape -> DB row payload ---------- */
+function toDbRow(entry) {
+  const num = (v) => {
+    if (v === "" || v === null || v === undefined) return null;
+    const n = Number(v);
+    return isNaN(n) ? null : n;
+  };
+  const payload = {};
+  payload[COL.auditNo]      = entry.id;
+  payload[COL.sbu]          = entry.sbu;
+  payload[COL.place]        = entry.place;
+  payload[COL.auditor]      = entry.auditor;
+  payload[COL.enroll]       = entry.enroll;
+  payload[COL.s1]           = num(entry.s1);
+  payload[COL.s2]           = num(entry.s2);
+  payload[COL.s3]           = num(entry.s3);
+  payload[COL.s4]           = num(entry.s4);
+  payload[COL.s5]           = num(entry.s5);
+  payload[COL.s6]           = num(entry.s6);
+  payload[COL.s7]           = num(entry.s7);
+  payload[COL.s8]           = num(entry.s8);
+  payload[COL.remarks]      = entry.remarks || null;
+  payload[COL.pictureLinks] = (entry.pictureLinks && entry.pictureLinks.length)
+                                ? entry.pictureLinks : null;
+  return payload;
+}
+
+function setStatus(msg) {
+  const el = document.getElementById("statusMsg");
+  if (el) el.textContent = msg;
+}
+
+/* ---------- READ ---------- */
+async function loadEntries() {
+  setStatus("Loading...");
+  try {
+    const res = await fetch(API + "?limit=" + ROW_LIMIT);
+    if (!res.ok) throw new Error("Load failed (" + res.status + "): " + (await res.text()));
+    const rows = await res.json();
+    entries = rows.map(fromDbRow);
+
+    highestAuditNum = entries.reduce((max, e) => {
+      const m = /AUD-(\d+)/.exec(e.id || "");
+      return m ? Math.max(max, parseInt(m[1], 10)) : max;
+    }, 0);
+
+    const newest = entries.length ? entries[0].timestamp : "-";
+    setStatus(entries.length === 0
+      ? "Connected - 0 rows returned"
+      : "Latest " + entries.length + " loaded (newest: " + newest + ")");
+
+    console.log("[API] loaded", entries.length, "rows; newest:", newest);
+  } catch (err) {
+    console.error("[API] load error:", err);
+    setStatus(String(err.message || err));
+    entries = [];
+  }
+}
+
+/* ---------- CREATE ---------- */
+async function insertEntry(entry) {
+  const res = await fetch(API, {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify(toDbRow(entry))
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    if (res.status === 409) {
+      throw new Error("An audit for this SBU, date and place already exists.");
+    }
+    throw new Error("Insert failed (" + res.status + "): " + text);
+  }
+  return res.json();
+}
+
+/* ---------- DELETE ---------- */
+async function deleteEntry(dbId) {
+  const res = await fetch(API + "/" + encodeURIComponent(dbId), { method: "DELETE" });
+  if (!res.ok) {
+    throw new Error("Delete failed (" + res.status + "): " + (await res.text()));
+  }
+}
+
+function nextAuditNo() {
+  return "AUD-" + String(highestAuditNum + 1).padStart(3, "0");
+}
+
+function nowTimestamp() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function pillarAvg(a, b) {
+  const av = [a, b].map(Number).filter(v => !isNaN(v) && v !== "");
+  if (av.length === 0) return null;
+  return av.reduce((x,y)=>x+y,0) / av.length;
+}
+
+function computeTotals(e) {
+  const sort = pillarAvg(e.s1, e.s2);
+  const order = pillarAvg(e.s3, e.s4);
+  const shine = pillarAvg(e.s5, e.s6);
+  const standardize = e.s7 !== "" && e.s7 !== undefined && e.s7 !== null ? Number(e.s7) : null;
+  const sustain = e.s8 !== "" && e.s8 !== undefined && e.s8 !== null ? Number(e.s8) : null;
+  const pillars = [sort, order, shine, standardize, sustain];
+  if (pillars.some(p => p === null)) return { total: null, percent: null };
+  const total = Math.round((sort + order + shine + standardize + sustain) * 100) / 100;
+  const percent = Math.round((total / 25) * 10000) / 100;
+  return { total, percent };
+}
+
+function computeFinal(e) {
+  return computeTotals(e).percent;
+}
+
+function scoreBand(final) {
+  if (final === null) return "bad";
+  if (final >= 80) return "good";
+  if (final >= 60) return "avg";
+  return "bad";
+}
+
+function scoreLabel(band) {
+  if (band === "good") return "Good Standing";
+  if (band === "avg") return "Needs Attention";
+  return "Critical";
+}
+
+function escapeHtml(str) {
+  if (str === undefined || str === null) return "";
+  return String(str)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function refreshFormDefaults() {
+  document.getElementById("auditNo").value = nextAuditNo();
+  document.getElementById("timestampDisplay").value = nowTimestamp();
+}
+
+function renderCards() {
+  const list = document.getElementById("cardsList");
+  const filtered = entries.filter(e => {
+    if (showHidden) return hiddenIds.has(e.id);
+    if (hiddenIds.has(e.id)) return false;
+    if (activeSbuFilter !== "all" && (e.sbu || "") !== activeSbuFilter) return false;
+    if (dateFilterActive && (dateFrom || dateTo)) {
+      if (!e.rawTimestamp) return false;
+      const entryDate = new Date(e.rawTimestamp).toISOString().slice(0, 10);
+      if (dateFrom && entryDate < dateFrom) return false;
+      if (dateTo && entryDate > dateTo) return false;
+    }
+    if (activeFilter === "all") return true;
+    return scoreBand(computeFinal(e)) === activeFilter;
+  });
+
+  const hiddenToggle = document.getElementById("hiddenToggle");
+  if (hiddenToggle) {
+    hiddenToggle.textContent = showHidden
+      ? "Back to dashboard"
+      : `Show hidden (${hiddenIds.size})`;
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">No entries in this view yet.<br><small style="color:var(--muted);">Loaded from database: ${entries.length} &nbsp;|&nbsp; SBU filter: ${activeSbuFilter} &nbsp;|&nbsp; Date filter: ${dateFilterActive ? (dateFrom || "—") + " to " + (dateTo || "—") : "off"}</small></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.slice().map(e => {
+    const { total, percent } = computeTotals(e);
+    const band = scoreBand(percent);
+    const criteriaLabels = [
+      ["Sort - Removed", e.s1], ["Sort - Red tag", e.s2],
+      ["Order - Location", e.s3], ["Order - Labels", e.s4],
+      ["Shine - Clean", e.s5], ["Shine - Assigned", e.s6],
+      ["Standardize", e.s7], ["Sustain", e.s8]
+    ];
+    return `
+      <div class="card">
+        <div class="card-top">
+          <div class="card-id-group">
+            <span class="card-id">${escapeHtml(e.id)}</span>
+            <span class="status-chip status-${band}">${scoreLabel(band)}</span>
+          </div>
+          <span class="card-meta">Logged ${escapeHtml(e.timestamp)}</span>
+        </div>
+        <div class="tag-row">
+          <span class="tag">${escapeHtml(e.sbu || "—")}</span>
+          <span class="tag">${escapeHtml(e.place || "—")}</span>
+          <span class="tag">By ${escapeHtml(e.auditor || "—")}</span>
+          <span class="tag">Enroll ${escapeHtml(e.enroll || "—")}</span>
+        </div>
+        <div class="section-label">Criteria Breakdown</div>
+        <div class="criteria-grid">
+          ${criteriaLabels.map(([k,v]) => `
+            <div class="criteria-item">
+              <span class="k">${k}</span>
+              <span class="v">${v === undefined || v === "" || v === null ? "—" : v}</span>
+            </div>`).join("")}
+        </div>
+        ${e.pictureLinks && e.pictureLinks.length ? `<div class="section-label">Pictures</div><div class="remarks-text">${e.pictureLinks.map((link, i) => `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent); margin-right:12px;">Image ${i + 1}</a>`).join("")}</div>` : ""}
+        ${e.remarks ? `<div class="section-label">Remarks</div><div class="remarks-text">${escapeHtml(e.remarks)}</div>` : ""}
+        <div class="card-footer">
+          <span class="final-score-pill status-${band}">Final Score: ${percent === null ? "—" : percent + "%"} ${total === null ? "" : `(${total}/25)`}</span>
+          <span>
+            <button class="hide-link" data-id="${escapeHtml(e.id)}">${hiddenIds.has(e.id) ? "Unhide" : "Hide"}</button>
+            <button class="del-link" data-id="${escapeHtml(e.id)}">Delete</button>
+          </span>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  list.querySelectorAll(".hide-link").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-id");
+      if (hiddenIds.has(id)) {
+        hiddenIds.delete(id);
+      } else {
+        hiddenIds.add(id);
+      }
+      saveHiddenIds();
+      renderCards();
+    });
+  });
+
+  list.querySelectorAll(".del-link").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const id = btn.getAttribute("data-id");
+      const target = entries.find(e => e.id === id);
+      btn.disabled = true;
+      btn.textContent = "Deleting...";
+      try {
+        if (target && target.dbId !== undefined) {
+          await deleteEntry(target.dbId);
+        }
+        entries = entries.filter(e => e.id !== id);
+        hiddenIds.delete(id);
+        saveHiddenIds();
+        renderCards();
+      } catch (err) {
+        console.error(err);
+        alert("Could not delete this entry. Please try again.");
+        btn.disabled = false;
+        btn.textContent = "Delete";
+      }
+    });
+  });
+}
+
+document.querySelectorAll(".filter-pill[data-filter]").forEach(pill => {
+  pill.addEventListener("click", () => {
+    document.querySelectorAll(".filter-pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    activeFilter = pill.getAttribute("data-filter");
+    renderCards();
+  });
+});
+
+document.getElementById("sbuFilter").addEventListener("change", (e) => {
+  activeSbuFilter = e.target.value;
+  renderCards();
+});
+
+document.getElementById("hiddenToggle").addEventListener("click", () => {
+  showHidden = !showHidden;
+  renderCards();
+});
+
+document.getElementById("dateFrom").addEventListener("input", (e) => {
+  if (!userTouchedDates) { e.target.value = ""; return; }
+  dateFrom = e.target.value;
+  dateFilterActive = true;
+  renderCards();
+});
+
+document.getElementById("dateTo").addEventListener("input", (e) => {
+  if (!userTouchedDates) { e.target.value = ""; return; }
+  dateTo = e.target.value;
+  dateFilterActive = true;
+  renderCards();
+});
+
+document.getElementById("clearDateFilter").addEventListener("click", () => {
+  clearDateFilterInputs();
+  renderCards();
+});
+
+document.getElementById("submitBtn").addEventListener("click", async () => {
+  const sbu = document.getElementById("sbuSelect").value;
+  const placeSelectVal = document.getElementById("auditPlace").value;
+  const isAddingNewPlace = placeSelectVal === "__add_new__";
+  const place = isAddingNewPlace
+    ? document.getElementById("auditPlaceCustom").value.trim()
+    : placeSelectVal;
+  const auditor = document.getElementById("auditorName").value.trim();
+  const enroll = document.getElementById("auditorEnroll").value.trim();
+  const scores = ["s1","s2","s3","s4","s5","s6","s7","s8"].map(id => document.getElementById(id).value);
+  const remarks = document.getElementById("remarks").value.trim();
+  const pictureLinks = getPictureLinks();
+
+  if (!sbu || !place || !auditor || !enroll || scores.some(v => v === "")) {
+    alert("Please fill all required fields (marked *) before logging the entry.");
+    return;
+  }
+
+  if (isAddingNewPlace && document.getElementById("auditPlaceSaveNew").checked) {
+    addCustomPlace(sbu, place);
+    if (document.getElementById("managePlaceSbu").value === sbu) refreshManagePlaceList();
+  }
+
+  const entry = {
+    id: nextAuditNo(),
+    sbu, place, auditor, enroll,
+    s1: scores[0], s2: scores[1], s3: scores[2], s4: scores[3],
+    s5: scores[4], s6: scores[5], s7: scores[6], s8: scores[7],
+    remarks, pictureLinks
+  };
+
+  const submitBtn = document.getElementById("submitBtn");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Logging...";
+
+  try {
+    const inserted = await insertEntry(entry);
+    const row = Array.isArray(inserted) ? inserted[0] : inserted;
+    entries.push(fromDbRow(row));
+    highestAuditNum += 1;
+
+    document.getElementById("sbuSelect").value = "";
+    populateAuditPlaceOptions("");
+    document.getElementById("auditorName").value = "";
+    document.getElementById("auditorEnroll").value = "";
+    ["s1","s2","s3","s4","s5","s6","s7","s8"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("remarks").value = "";
+    resetPictureLinkInputs();
+    refreshFormDefaults();
+    renderCards();
+  } catch (err) {
+    console.error(err);
+    alert("Could not save this entry to the database. Please check the server connection and try again.");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Log Entry";
+  }
+});
+
+function clearDateFilterInputs() {
+  dateFrom = "";
+  dateTo = "";
+  dateFilterActive = false;
+  userTouchedDates = false;
+  const fromEl = document.getElementById("dateFrom");
+  const toEl = document.getElementById("dateTo");
+  if (fromEl) fromEl.value = "";
+  if (toEl) toEl.value = "";
+}
+
+(async function init() {
+  clearDateFilterInputs();
+  await loadEntries();
+  refreshFormDefaults();
+  renderPictureLinkInputs();
+  populateAuditPlaceOptions("");
+  refreshManagePlaceList();
+  renderCards();
+})();
+
+window.addEventListener("pageshow", () => {
+  clearDateFilterInputs();
+  renderCards();
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPEX Command Center — All Servers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1b19;
+    --steel-900:#14181c;
+    --steel-800:#1e252b;
+    --steel-700:#2a333a;
+    --steel-600:#3c4750;
+    --paper:#f2ede4;
+    --amber:#e08a2c;
+    --amber-dim:#c97418;
+    --green:#5a8f5a;
+    --red:#c0503e;
+    --blue:#2f6fed;
+    --indigo:#5b57e0;
+    --purple:#7c5cff;
+    --pink:#e0436b;
+    --font-display:'Oswald',ui-sans-serif,sans-serif;
+    --font-body:'Inter',ui-sans-serif,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--steel-900);
+    color:var(--paper);
+    font-family:var(--font-body);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  .top-accent{height:4px;background:linear-gradient(90deg,var(--purple),var(--indigo),var(--blue),var(--green),var(--amber),var(--pink));}
+
+  header{
+    background:var(--steel-800);
+    border-bottom:3px solid var(--amber);
+    padding:26px 40px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .brand{display:flex;align-items:center;gap:16px;}
+  .brand-mark{
+    width:46px;height:46px;
+    background:var(--amber);
+    color:var(--steel-900);
+    font-family:var(--font-display);
+    font-weight:700;
+    display:flex;align-items:center;justify-content:center;
+    font-size:17px;
+    letter-spacing:0.5px;
+    clip-path:polygon(0 0,100% 0,100% 75%,75% 100%,0 100%);
+  }
+  .brand h1{font-family:var(--font-display);font-size:22px;font-weight:600;margin:0;letter-spacing:0.3px;}
+  .brand p{margin:3px 0 0;font-size:12.5px;color:#9aa5ac;letter-spacing:0.4px;}
+  .clock{font-family:var(--font-mono);font-size:13px;color:var(--amber);text-align:right;}
+  .clock small{display:block;color:#8b969d;font-size:10.5px;margin-top:2px;letter-spacing:1px;}
+
+  .page{max-width:1180px;margin:0 auto;padding:44px 32px 70px;}
+  .eyebrow{display:flex;align-items:center;gap:8px;color:var(--amber);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px;}
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--amber);}
+  h2{font-family:var(--font-display);font-size:30px;margin:0 0 10px;letter-spacing:0.3px;}
+  .lede{color:var(--muted,#8b969d);font-size:14.5px;max-width:720px;line-height:1.55;margin-bottom:36px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;}
+  @media (max-width:900px){.grid{grid-template-columns:1fr;}}
+
+  .module{
+    display:block;
+    background:var(--steel-800);
+    border:1px solid var(--steel-600);
+    border-radius:16px;
+    padding:26px 24px;
+    text-decoration:none;
+    color:var(--paper);
+    position:relative;
+    overflow:hidden;
+    transition:transform .15s, box-shadow .15s, border-color .15s;
+  }
+  .module::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--accent,var(--amber));}
+  .module:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgba(0,0,0,.35);border-color:var(--accent,var(--amber));}
+  .module-icon{
+    width:52px;height:52px;border-radius:13px;
+    background:color-mix(in srgb, var(--accent,var(--amber)) 16%, transparent);
+    display:flex;align-items:center;justify-content:center;
+    font-size:24px;margin-bottom:18px;
+  }
+  .module h3{font-family:var(--font-display);font-size:19px;font-weight:600;margin:0 0 6px;letter-spacing:0.3px;}
+  .module .desc{font-size:12.5px;color:#9aa5ac;line-height:1.5;margin-bottom:16px;}
+  .module .meta{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11px;color:var(--muted,#8b969d);}
+  .module .meta .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+  .module .go{font-family:var(--font-display);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--accent,var(--amber));margin-top:14px;display:inline-block;}
+
+  .footer{max-width:1180px;margin:40px auto 0;padding:0 32px;color:#5c666d;font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+</style>
+</head>
+<body>
+<div class="top-accent"></div>
+
+<header>
+  <div class="brand">
+    <div class="brand-mark">OPEX</div>
+    <div>
+      <h1>OPEX Command Center</h1>
+      <p>Operational Excellence · AKIJ Resource</p>
+    </div>
+  </div>
+  <div class="clock" id="clockBox">--:--:--<small id="dateBox">LOADING</small></div>
+</header>
+
+<div class="page">
+  <div class="eyebrow"><span class="dot"></span> ALL SERVERS</div>
+  <h2>Select a module to open</h2>
+  <div class="lede">Each module runs on its own live connection to the AKIJ Resource PostgreSQL database. Choose one to open its dashboard.</div>
+
+  <div class="grid">
+    <a class="module" href="http://127.0.0.1:5000/" style="--accent:var(--amber);">
+      <div class="module-icon">⏱️</div>
+      <h3>4-Hour Tracking</h3>
+      <div class="desc">Log &amp; review 4-hour shift production, target vs actual, gaps, breakdowns and NPT for every SBU.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5000</div>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5001/" style="--accent:var(--purple);">
+      <div class="module-icon">✨</div>
+      <h3>5S Audit</h3>
+      <div class="desc">Record and score 5S floor audits across all SBUs, with auto-computed final scores and filters.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5001</div>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5003/" style="--accent:var(--blue);">
+      <div class="module-icon">📊</div>
+      <h3>Daily Meeting Dashboard</h3>
+      <div class="desc">MTD &amp; yesterday KPIs across production, Kaizen, 5S, meetings — plus overdue alerts, projects &amp; agenda.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5003</div>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5002/" style="--accent:var(--green);">
+      <div class="module-icon">🎯</div>
+      <h3>KPI Target Entry</h3>
+      <div class="desc">Set and track monthly KPI targets per SBU — production budget, OEE, capacity utilisation, Kaizen &amp; more.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5002</div>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5005/" style="--accent:var(--pink);">
+      <div class="module-icon">📝</div>
+      <h3>Daily Meeting Form</h3>
+      <div class="desc">Record daily operation &amp; improvement meetings, 4-hour tracking counts, and update corrective actions.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5005</div>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5006/" style="--accent:var(--indigo);">
+      <div class="module-icon">🗂️</div>
+      <h3>OPEX Command Center</h3>
+      <div class="desc">Improvement &amp; problem-solving cards with acceptance workflow, plus the merged savings initiative tracker.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5006</div>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5007/" style="--accent:var(--purple);">
+      <div class="module-icon">⚙️</div>
+      <h3>Process Standardization Index</h3>
+      <div class="desc">Register process-standardization projects, update status, finalize with a summary, and track monthly output.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5007</div>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5008/" style="--accent:var(--blue);">
+      <div class="module-icon">🔬</div>
+      <h3>QCP Audit Portal</h3>
+      <div class="desc">Enter QCP quality audits with auto pass/fail, manage test specs, and browse/filter/edit audit history.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5008</div>
+      <span class="go">Open module →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5004/memo" style="--accent:var(--green);">
+      <div class="module-icon">📨</div>
+      <h3>Daily Ops Memo</h3>
+      <div class="desc">Fill the daily work update report (DOR-08) and send it to the deputy COO via Gmail. Saved on this device.</div>
+      <div class="meta"><span class="dot"></span> Local · no database · server 5004</div>
+      <span class="go">Open memo →</span>
+    </a>
+
+    <a class="module" href="http://127.0.0.1:5009/" style="--accent:var(--indigo);">
+      <div class="module-icon">📁</div>
+      <h3>Project Control Sheet</h3>
+      <div class="desc">Register projects, define weighted milestones, finalize with actuals, and track the running project ledger.</div>
+      <div class="meta"><span class="dot"></span> Live database · port 5009</div>
+      <span class="go">Open module →</span>
+    </a>
+  </div>
+</div>
+
+<div class="footer">
+  <span>OPEX Command Center</span>
+  <span>Connected to arl-community-developer.postgres.database.azure.com</span>
+</div>
+
+<script>
+  function tick(){
+    const now = new Date();
+    document.getElementById('clockBox').firstChild.textContent = now.toLocaleTimeString('en-GB');
+    document.getElementById('dateBox').textContent = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'short',day:'numeric'}).toUpperCase();
+  }
+  tick(); setInterval(tick,1000);
+</script>
+</body>
+</html>
