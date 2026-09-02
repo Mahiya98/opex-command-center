@@ -25,5 +25,10 @@ def memo():
     return send_from_directory(_BASE, "daily-ops-memo.html")
 
 
+@app.route("/dashboard")
+def daily_dash():
+    return send_from_directory(_BASE, "opex-daily-dashboard.html")
+
+
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5004, debug=True)

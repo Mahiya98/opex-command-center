@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPEX Daily Dashboard — ACCL</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#12161f; --panel2:#171c28; --line:#232838;
+    --text:#e8eaef; --muted:#8b93a7; --accent:#d99a3d; --accent2:#2f6fed;
+    --good:#3fae62; --avg:#d9b83d; --bad:#d9553d;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,'Segoe UI',Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 24px;border-bottom:1px solid var(--line);}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;}
+  .brand .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+  .wrap{max-width:1300px;margin:0 auto;padding:24px 24px 60px;}
+
+  /* header + filters */
+  .page-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;margin-bottom:20px;}
+  .page-head h1{font-size:26px;margin:0;}
+  .page-head .sub{color:var(--muted);font-size:13px;margin-top:4px;}
+
+  .filters{
+    display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:22px;
+  }
+  .filter-item{display:flex;flex-direction:column;gap:6px;}
+  .filter-item label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .filter-item input,.filter-item select{
+    background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:9px 11px;font-size:13.5px;font-family:inherit;min-width:150px;
+  }
+  .filter-item input:focus,.filter-item select:focus{outline:none;border-color:var(--accent);}
+  .btn{background:var(--accent);color:#1a1300;border:none;border-radius:8px;padding:10px 18px;font-size:13.5px;font-weight:700;cursor:pointer;}
+  .btn:hover{filter:brightness(1.08);}
+  .btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);}
+  .today-chip{font-size:12.5px;color:var(--muted);padding:10px 0;}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  @media(max-width:840px){.grid{grid-template-columns:1fr;}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+  .card-head{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;}
+  .card-head .ic{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .card-head h2{margin:0;font-size:15px;font-weight:700;}
+  .card-head .count{margin-left:auto;font-family:'Courier New',monospace;font-weight:800;font-size:14px;color:var(--accent);}
+  .card-body{padding:6px 8px 12px;max-height:520px;overflow-y:auto;}
+  .summary{display:flex;gap:10px;margin:12px 16px 4px;flex-wrap:wrap;}
+  .chip{font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--panel);}
+  td{padding:8px 12px;border-bottom:1px solid #ffffff0d;vertical-align:top;}
+  td.num{font-family:'Courier New',monospace;text-align:right;}
+  .sbubadge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--panel2);color:var(--muted);}
+  .pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:700;}
+  .pill.good{background:rgba(63,174,98,.15);color:var(--good);}
+  .pill.bad{background:rgba(217,85,61,.15);color:var(--bad);}
+  .pill.avg{background:rgba(217,184,61,.15);color:var(--avg);}
+  .pill.neutral{background:rgba(139,147,167,.15);color:var(--muted);}
+  .empty{color:var(--muted);text-align:center;padding:40px 0;font-size:13px;}
+  .load-note{padding:14px;color:var(--muted);font-size:12.5px;text-align:center;}
+  ::-webkit-scrollbar{width:8px;}::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><span class="dot"></span> OPEX Daily Dashboard</div>
+  <div style="font-size:12px;color:var(--muted);font-family:'Courier New',monospace;" id="clock">--:--:--</div>
+</header>
+
+<div class="wrap">
+  <div class="page-head">
+    <div>
+      <h1>Today's Operations by SBU</h1>
+      <div class="sub">Live data from Supabase · 5S Audits · Improvement Cards · Cost Savings · QCP Audit</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-item">
+      <label>From Date</label>
+      <input type="date" id="fFrom">
+    </div>
+    <div class="filter-item">
+      <label>To Date</label>
+      <input type="date" id="fTo">
+    </div>
+    <div class="filter-item">
+      <label>SBU</label>
+      <select id="fSbu">
+        <option value="">All SBUs</option>
+      </select>
+    </div>
+    <button class="btn" id="applyBtn">Apply</button>
+    <button class="btn ghost" id="resetBtn">Reset to Today</button>
+    <span class="today-chip" id="todayLabel">Showing: today</span>
+  </div>
+
+  <div class="grid">
+    <!-- 5S -->
+    <div class="card">
+      <div class="card-head">
+        <div class="ic" style="background:rgba(217,154,61,.15);">✨</div>
+        <h2>5S Audits</h2>
+        <span class="count" id="c5s">…</span>
+      </div>
+      <div class="summary" id="s5s"></div>
+      <div class="card-body"><table id="t5s"></table></div>
+    </div>
+
+    <!-- Improvement Cards -->
+    <div class="card">
+      <div class="card-head">
+        <div class="ic" style="background:rgba(47,111,237,.15);">💡</div>
+        <h2>Improvement Cards</h2>
+        <span class="count" id="cimp">…</span>
+      </div>
+      <div class="summary" id="simp"></div>
+      <div class="card-body"><table id="timp"></table></div>
+    </div>
+
+    <!-- Cost Savings -->
+    <div class="card">
+      <div class="card-head">
+        <div class="ic" style="background:rgba(63,174,98,.15);">💰</div>
+        <h2>Cost Savings (BDT)</h2>
+        <span class="count" id="ccost">…</span>
+      </div>
+      <div class="summary" id="scost"></div>
+      <div class="card-body"><table id="tcost"></table></div>
+    </div>
+
+    <!-- QCP Audit -->
+    <div class="card">
+      <div class="card-head">
+        <div class="ic" style="background:rgba(217,85,61,.15);">🔬</div>
+        <h2>QCP Audits</h2>
+        <span class="count" id="cqcp">…</span>
+      </div>
+      <div class="summary" id="sqcp"></div>
+      <div class="card-body"><table id="tqcp"></table></div>
+    </div>
+  </div>
+
+  <!-- ===== TARGET vs ACTUAL ===== -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head">
+      <div class="ic" style="background:rgba(217,184,61,.2);">🎯</div>
+      <h2>Target vs Actual (monthly)</h2>
+      <select id="tMonth" class="monthsel" style="margin-left:auto;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:8px 12px;font-size:13px;"></select>
+      <span class="count" id="ctarget">…</span>
+    </div>
+    <div class="card-body" style="max-height:none;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 12px;" id="targetLegend"></div>
+      <table id="ttarget"></table>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = "https://vpwbcuxwxkqvauffqooj.supabase.co/rest/v1/";
+const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwd2JjdXh3eGtxdmF1ZmZxb29qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM4MjA4NjEsImV4cCI6MjA5OTM5Njg2MX0.iAoIZXl-2G7h3wm4jcYsEs6-wdN-YKTS-KbBteBBzUk";
+
+function todayStr(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function esc(s){const d=document.createElement('div');d.textContent=s==null?'':s;return d.innerHTML;}
+function money(n){return Number(n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});}
+
+async function sbGet(table, query){
+  const url = API + table + '?' + query;
+  const res = await fetch(url, {headers:{'apikey':KEY,'Authorization':'Bearer '+KEY}});
+  if(!res.ok) throw new Error(table+' '+res.status);
+  return res.json();
+}
+
+let from=todayStr(), to=todayStr(), sbu='';
+function qDate(col){ // build filter string (PostgREST: column=op.value)
+  let parts=[];
+  if(from) parts.push(col+'=gte.'+from);
+  if(to) parts.push(col+'=lte.'+to);
+  if(sbu) parts.push('sbu=eq.'+encodeURIComponent(sbu));
+  return 'select=*&'+parts.join('&')+'&order='+col+'.desc&limit=500';
+}
+
+async function load(){
+  renderLoading();
+  const tasks=[];
+  // 5S: audit_timestamp
+  tasks.push(sbGet('accl_5s_audit_entries', qDate('audit_timestamp')).then(r=>render5s(r)));
+  // improvement_cards: created_date
+  tasks.push(sbGet('accl_improvement_cards', qDate('created_date')).then(r=>renderImp(r)));
+  // cost_savings: start_date
+  tasks.push(sbGet('accl_cost_savings', qDate('start_date')).then(r=>renderCost(r)));
+  // qcp_audit: audit_date
+  tasks.push(sbGet('qcp_audit', qDate('audit_date')).then(r=>renderQcp(r)));
+  await Promise.all(tasks).catch(e=>{console.error(e);});
+  document.getElementById('todayLabel').textContent='Showing: '+(from||'…')+' — '+(to||'…')+(sbu?' · '+sbu:' · all SBUs');
+}
+
+function qcpClass(st){ if(st==='Pass')return 'good'; if(st==='Fail')return 'bad'; return 'neutral'; }
+function statusPill(s){ return '<span class="pill neutral">'+esc(s||'—')+'</span>'; }
+
+function render5s(rows){
+  const count=document.getElementById('c5s'); count.textContent=rows.length+' audits';
+  // group by sbu -> average final_score_pct
+  const by={};
+  rows.forEach(r=>{const k=r.sbu||'—';(by[k]=by[k]||[]).push(Number(r.final_score_pct||0));});
+  const summary=Object.entries(by).map(([k,v])=>'<span class="chip" style="background:rgba(63,174,98,.15);color:var(--good);">'+esc(k)+' '+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)+'%</span>').join('');
+  document.getElementById('s5s').innerHTML=summary||'<span class="chip" style="background:rgba(139,147,167,.15);color:var(--muted);">No data</span>';
+  const th='<tr><th>SBU</th><th>Audits</th><th>Avg Score</th></tr>';
+  if(!rows.length){document.getElementById('t5s').innerHTML='<div class="empty">No 5S audits in range.</div>';return;}
+  document.getElementById('t5s').innerHTML=th+Object.entries(by).sort((a,b)=>(b[1].reduce((x,y)=>x+y,0)/b[1].length)-(a[1].reduce((x,y)=>x+y,0)/a[1].length)).map(([k,v])=>'<tr><td><span class="sbubadge">'+esc(k)+'</span></td><td class="num">'+v.length+'</td><td class="num">'+(v.reduce((a,b)=>a+b,0)/v.length).toFixed(1)+'%</td></tr>').join('');
+}
+
+function renderImp(rows){
+  const count=document.getElementById('cimp'); count.textContent=rows.length+' cards';
+  const pend=rows.filter(r=>r.status==='Pending').length, ong=rows.filter(r=>r.status==='Ongoing').length;
+  document.getElementById('simp').innerHTML=
+    '<span class="chip" style="background:rgba(139,147,167,.15);color:var(--muted);">Pending '+pend+'</span>'+
+    '<span class="chip" style="background:rgba(47,111,237,.15);color:var(--accent2);">Ongoing '+ong+'</span>';
+  const th='<tr><th>SBU</th><th>Card</th><th>Dept</th><th>Status</th></tr>';
+  if(!rows.length){document.getElementById('timp').innerHTML='<div class="empty">No improvement cards in range.</div>';return;}
+  document.getElementById('timp').innerHTML=th+rows.map(r=>'<tr><td><span class="sbubadge">'+esc(r.sbu)+'</span></td><td>'+esc(r.card_no)+'</td><td>'+esc(r.dept)+'</td><td>'+statusPill(r.status)+'</td></tr>').join('');
+}
+
+function renderCost(rows){
+  const count=document.getElementById('ccost'); count.textContent=rows.length+' entries';
+  const tot=rows.reduce((a,r)=>a+Number(r.total_savings_bdt||0),0);
+  document.getElementById('scost').innerHTML=
+    '<span class="chip" style="background:rgba(63,174,98,.15);color:var(--good);">Total '+money(tot)+' BDT</span>';
+  const th='<tr><th>SBU</th><th>Card</th><th>Detail</th><th>Savings (BDT)</th></tr>';
+  if(!rows.length){document.getElementById('tcost').innerHTML='<div class="empty">No cost savings in range.</div>';return;}
+  document.getElementById('tcost').innerHTML=th+rows.map(r=>'<tr><td><span class="sbubadge">'+esc(r.sbu||'—')+'</span></td><td>'+esc(r.card_no)+'</td><td>'+esc(r.project_details||r.section)+'</td><td class="num">'+money(r.total_savings_bdt)+'</td></tr>').join('');
+}
+
+function renderQcp(rows){
+  const count=document.getElementById('cqcp'); count.textContent=rows.length+' audits';
+  const pass=rows.filter(r=>r.status==='Pass').length;
+  document.getElementById('sqcp').innerHTML=
+    '<span class="chip" style="background:rgba(63,174,98,.15);color:var(--good);">Pass '+pass+'/'+rows.length+'</span>';
+  const th='<tr><th>SBU</th><th>Section</th><th>Machine</th><th>Test</th><th>Status</th></tr>';
+  if(!rows.length){document.getElementById('tqcp').innerHTML='<div class="empty">No QCP audits in range.</div>';return;}
+  document.getElementById('tqcp').innerHTML=th+rows.map(r=>'<tr><td><span class="sbubadge">'+esc(r.sbu)+'</span></td><td>'+esc(r.section)+'</td><td>'+esc(r.machine_name)+'</td><td>'+esc(r.test_name)+'</td><td>'+statusPill(r.status)+'</td></tr>').join('');
+}
+
+function renderLoading(){['t5s','timp','tcost','tqcp'].forEach(id=>document.getElementById(id).innerHTML='<div class="load-note">Loading…</div>');}
+
+async function loadSbus(){
+  const set=new Set();
+  for(const [t,c] of [['accl_5s_audit_entries','sbu'],['accl_improvement_cards','sbu'],['qcp_audit','sbu'],['accl_cost_savings','sbu']]){
+    try{const r=await sbGet(t,'select=sbu&limit=500&'+c+'.not.is.null');r.forEach(x=>{if(x[c])set.add(x[c]);});}catch(e){}
+  }
+  const sel=document.getElementById('fSbu');
+  [...set].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o);});
+}
+
+function tick(){const n=new Date();document.getElementById('clock').textContent=n.toLocaleTimeString('en-GB');}
+setInterval(tick,1000);tick();
+
+/* ===================== TARGET vs ACTUAL ===================== */
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+// map month string (e.g. "Aug-26" || "August" || "Jul-26") -> {year,month}
+function parseMonth(s){
+  s=(s||'').trim();
+  if(!s) return null;
+  let m=MONTHS.findIndex(x=>s.startsWith(x.slice(0,3)));
+  if(m===-1){ m=(s.indexOf('-' )>-1?0:0); }
+  // explicit name
+  for(let i=0;i<MONTHS.length;i++) if(s.toLowerCase().startsWith(MONTHS[i].slice(0,3).toLowerCase())){m=i;break;}
+  let year=new Date().getFullYear();
+  const ym=s.match(/(\d{2})$/);
+  if(ym){ const yy=parseInt(ym[1],10); year=(yy>60?1900:2000)+yy; }
+  return {year, month:m+1};
+}
+function monthRange(s){
+  const p=parseMonth(s);
+  if(!p) return {from:null,to:null};
+  const start=p.year+'-'+String(p.month).padStart(2,'0')+'-01';
+  const last=new Date(p.year,p.month,0).getDate();
+  const end=p.year+'-'+String(p.month).padStart(2,'0')+'-'+String(last).padStart(2,'0');
+  return {from:start,to:end,label:s};
+}
+function monthNum(s){const p=parseMonth(s);return p? p.year*100+p.month : 0;}
+
+let targets=[]; let targetMonth='';
+async function loadTargets(){
+  try{
+    const rows=await sbGet('ACCL_KPI_TARGET','select=sbu,kpi_id,month,monthly_target&limit=2000');
+    targets=rows.map(r=>({sbu:r.sbu,kpi:r.kpi_id,month:r.month,target:parseFloat(String(r.monthly_target).replace(/,/g,''))||0}));
+    // distinct months, sorted
+    const set=[...new Set(targets.map(t=>t.month))];
+    const sel=document.getElementById('tMonth');
+    set.sort((a,b)=>monthNum(a)-monthNum(b));
+    sel.innerHTML=set.map(m=>'<option value="'+esc(m)+'">'+esc(m)+'</option>').join('');
+    targetMonth=set[set.length-1];
+    sel.value=targetMonth;
+    sel.onchange=()=>{targetMonth=sel.value;renderTarget();};
+  }catch(e){console.error(e);}
+}
+
+async function renderTarget(){
+  const mr=monthRange(targetMonth);
+  const ct=document.getElementById('ctarget');
+  ct.textContent='Target: '+targetMonth;
+  if(!mr.from){document.getElementById('ttarget').innerHTML='<div class="empty">No target period.</div>';return;}
+  const days=new Date(mr.to).getDate();
+  const SBUMAP={"Akij Cement Company Ltd":"ACCL","Akij Cement Co Ltd":"ACCL","Akij Cement":"ACCL","Akij Agro Feed Limited":"AAFL","Akij Agro Feed Ltd":"AAFL","Akij Agro":"AAFL","Fariq Agro Ltd":"FAL","Fariq Agro":"FAL","Akij Essential Ltd":"AEFML","Akij Essential Flour Mills":"AEFML","Akij Essential":"AEFML","Akij Ishpat Ltd":"AIL","Akij Ispat":"AIL","Akij Polyfiber Industries Ltd":"APFIL","Akij Poly Fibre Industries Ltd":"APFIL","Akij Polyfiber":"APFIL","Akij Textile Mills Ltd":"ATML","Hashem Rice Mills Ltd":"HRML","Hashem Rice Mills":"HRML","Akij Flour Mills Ltd":"AFML","Akij Light Engineering":"ALEL"};
+  function norm(s){s=(s||'').trim(); if(!s) return null; if(SBUMAP[s])return SBUMAP[s]; return s;}
+  let [fiveS,imp,qcp]=await Promise.all([
+    sbGet('accl_5s_audit_entries','select=sbu,final_score_pct&audit_timestamp=gte.'+mr.from+'&audit_timestamp=lte.'+mr.to+'&limit=1000').catch(()=>[]),
+    sbGet('accl_improvement_cards','select=sbu&created_date=gte.'+mr.from+'&created_date=lte.'+mr.to+'&limit=1000').catch(()=>[]),
+    sbGet('qcp_audit','select=sbu&audit_date=gte.'+mr.from+'&audit_date=lte.'+mr.to+'&limit=2000').catch(()=>[])
+  ]);
+  // aggregate (normalize sbu)
+  const fiveSBy={};fiveS.forEach(r=>{const k=norm(r.sbu);if(k){fiveSBy[k]=fiveSBy[k]||[];fiveSBy[k].push(Number(r.final_score_pct||0));}});
+  const impCount={};imp.forEach(r=>{const k=norm(r.sbu);if(k)impCount[k]=(impCount[k]||0)+1;});
+  const qcpCount={};qcp.forEach(r=>{const k=norm(r.sbu);if(k)qcpCount[k]=(qcpCount[k]||0)+1;});
+  // build map target per sbu for this month
+  const tmap={};targets.filter(t=>t.month===targetMonth).forEach(t=>{tmap[t.sbu]=tmap[t.sbu]||{};tmap[t.sbu][t.kpi]=t.target;});
+
+  const legend=document.getElementById('targetLegend');
+  legend.innerHTML='<span class="chip" style="background:rgba(217,184,61,.2);color:var(--avg);">5S target vs avg score</span>'+
+    '<span class="chip" style="background:rgba(47,111,237,.2);color:var(--accent2);">QCP: monthly target ÷30 per day</span>'+
+    '<span class="chip" style="background:rgba(63,174,98,.2);color:var(--good);">Improvement: monthly target count</span>';
+
+  const sbus=[...new Set([...Object.keys(tmap)])].sort();
+  if(!sbus.length){document.getElementById('ttarget').innerHTML='<div class="empty">No targets for this period.</div>';return;}
+  const th='<tr><th>SBU</th><th>5S<br>(tgt / avg)</th><th>QCP<br>(tgt/day · count)</th><th>Improv<br>(tgt / actual)</th></tr>';
+  document.getElementById('ttarget').innerHTML=th+sbus.map(s=>{
+    const t=tmap[s];
+    const s5t=t['5s_score']; const act5=fiveSBy[s]?(fiveSBy[s].reduce((a,b)=>a+b,0)/fiveSBy[s].length):null;
+    const qcpT=t['qcp_audit']; const dayT=qcpT? qcpT/30 : null; const qa=qcpCount[s]||0;
+    const kzT=t['kaizen']; const ka=impCount[s]||0;
+    return '<tr><td><span class="sbubadge">'+esc(s)+'</span></td>'+
+      '<td class="num">'+(s5t? s5t+'% / '+(act5==null?'—':act5.toFixed(1)+'%'):'—')+'</td>'+
+      '<td class="num">'+(dayT!=null? (dayT.toFixed(1)+' / '+qa):'—')+'</td>'+
+      '<td class="num">'+(kzT? (kzT+' / '+ka):'—')+'</td></tr>';
+  }).join('');
+}
+
+document.getElementById('applyBtn').onclick=()=>{from=document.getElementById('fFrom').value; to=document.getElementById('fTo').value; sbu=document.getElementById('fSbu').value; load();};
+document.getElementById('resetBtn').onclick=()=>{
+  from=todayStr();to=todayStr();sbu='';
+  document.getElementById('fFrom').value=from;document.getElementById('fTo').value=to;document.getElementById('fSbu').value='';
+  load();
+};
+// default to today
+document.getElementById('fFrom').value=todayStr();
+document.getElementById('fTo').value=todayStr();
+
+loadSbus();
+loadTargets().then(renderTarget);
+load();
+</script>
+</body>
+</html>
